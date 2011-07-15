@@ -256,17 +256,31 @@ sub show_chat {
 
    my @backlog = @{$self->{backlog}};
 
-   my $txt;
+   my @txt;
    for (my $i = 0; $i < 15; $i++) {
       my $l = pop @backlog
          or last;
-      $txt = (sprintf "%10s: %s\n", @$l) . $txt;
+      my ($type, $txt) = @$l;
+      if ($type eq 'public') {
+         $txt = [text => { font => "normal", align => "left", wrap => -60, color => "#ffffff" }, $txt];
+      } elsif ($type eq 'private') {
+         $txt = [text => { font => "normal", align => "left", wrap => -60, color => "#ffaaaa" }, $txt];
+      } elsif ($type eq 'error') {
+         $txt = [text => { font => "normal", align => "left", wrap => -60, color => "#ff0000" }, $txt];
+      } elsif ($type eq 'info') {
+         $txt = [text => { font => "normal", align => "left", wrap => -60, color => "#0000dd" }, $txt];
+      } else {
+         $txt = [text => { font => "normal", align => "left", wrap => -60, color => "#dddddd" }, $txt];
+      }
+      unshift @txt, $txt;
    }
 
    $self->{front}->activate_ui (irc_chat => {
       %{
          ui_window (($mode eq 'community' ? "Community Chat" : "Chat"),
-            ui_text ($txt, height => 50, wrap => -60, align => "left"),
+            ui_border (
+               @txt
+            ),
             ui_entry_small (irc => "", 100),
             ui_key_inline_expl (return => "Send message"),
             ui_key_inline_expl ("page up"   => "Scroll backlog up"),
@@ -289,8 +303,19 @@ sub show_chat {
          my ($nick, $chan, $host, $port, $connect) = $self->get_chat_settings;
 
          if ($cmd eq 'send') {
-            $self->{con}->send_srv (PRIVMSG => $chan, $arg->{irc});
-            $self->chat_log (public => sprintf "<%10s> %s", $self->{con}->nick, $arg->{irc});
+            if ($arg->{irc} =~ /^\/(\S+)\s*(.*)/) {
+               my ($c, $a) = ($1, $2);
+               if ($c eq 'msg' && $a =~ /(\S+)\s+(.*)$/) {
+                  $self->{con}->send_srv (PRIVMSG => $1, $2);
+                  $self->chat_log (private => sprintf "<%10s -> %-10s> %s", $self->{con}->nick, $1, $2);
+               } else {
+                  $self->chat_log (error => "unknown command: /$c");
+               }
+
+            } else {
+               $self->{con}->send_srv (PRIVMSG => $chan, $arg->{irc});
+               $self->chat_log (public => sprintf "<%10s> %s", $self->{con}->nick, $arg->{irc});
+            }
             $self->show;
             return 1;
 
