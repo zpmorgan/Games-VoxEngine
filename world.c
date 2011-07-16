@@ -45,7 +45,7 @@
 /* Store important information about the block types. This information
  * is used by nearly every algorithm implemented in C currently.
  */
-typedef struct _ctr_obj_attr {
+typedef struct _vox_obj_attr {
   double uv[4];
   unsigned short transparent : 1;
   unsigned short blocking    : 1;
@@ -54,9 +54,9 @@ typedef struct _ctr_obj_attr {
   unsigned short active      : 1;
   unsigned int   model_dim   : 3;
   unsigned int   model_blocks[MAX_MODEL_SIZE];
-} ctr_obj_attr;
+} vox_obj_attr;
 
-typedef struct _ctr_cell {
+typedef struct _vox_cell {
    unsigned short type;
    unsigned char  light;
    unsigned char  meta;
@@ -66,50 +66,50 @@ typedef struct _ctr_cell {
    unsigned char  visible : 1;
 
    unsigned char  pad     : 7; // some padding
-} ctr_cell;
+} vox_cell;
 
 // Some (unfinished) try to implement storing changes:
 #if 0
 #define MAX_CHUNK_CHANGES 200
-typedef struct _ctr_chunk_changed_cell {
+typedef struct _vox_chunk_changed_cell {
     int rx, ry, rz;
-} ctr_chunk_changed_cell;
+} vox_chunk_changed_cell;
 #endif
 
-typedef struct _ctr_chunk {
+typedef struct _vox_chunk {
     int x, y, z;
-    ctr_cell cells[CHUNK_ALEN];
+    vox_cell cells[CHUNK_ALEN];
     int dirty;
 #if 0
-    ctr_chunk_changed_cell changed_cells[MAX_CHUNK_CHANGES];
+    vox_chunk_changed_cell changed_cells[MAX_CHUNK_CHANGES];
     int changes;
 #endif
-} ctr_chunk;
+} vox_chunk;
 
-typedef struct _ctr_world {
-    ctr_axis_array *y;
+typedef struct _vox_world {
+    vox_axis_array *y;
     SV *chunk_change_cb;        // callback for changed chunks.
     SV *active_cell_change_cb;  // callback for changed "active" cells.
-} ctr_world;
+} vox_world;
 
-static ctr_obj_attr OBJ_ATTR_MAP[POSSIBLE_OBJECTS];
-static ctr_world WORLD;
-static ctr_cell neighbour_cell;
+static vox_obj_attr OBJ_ATTR_MAP[POSSIBLE_OBJECTS];
+static vox_world WORLD;
+static vox_cell neighbour_cell;
 
-typedef struct _ctr_light_item {
+typedef struct _vox_light_item {
     int x, y, z;
     unsigned char lv;
-} ctr_light_item;
+} vox_light_item;
 
 // We use a set of two queues, so we can quickly switch back and forth.
-static ctr_queue *light_upd_queue   = 0;
-static ctr_queue *light_upd_queue_1 = 0;
-static ctr_queue *light_upd_queue_2 = 0;
+static vox_queue *light_upd_queue   = 0;
+static vox_queue *light_upd_queue_1 = 0;
+static vox_queue *light_upd_queue_2 = 0;
 
-void ctr_world_init ()
+void vox_world_init ()
 {
   int i;
-  WORLD.y = ctr_axis_array_new ();
+  WORLD.y = vox_axis_array_new ();
   memset (OBJ_ATTR_MAP, 0, sizeof (OBJ_ATTR_MAP));
   neighbour_cell.type    = 0;
   neighbour_cell.light   = 0;
@@ -117,65 +117,65 @@ void ctr_world_init ()
   neighbour_cell.meta    = 0;
   neighbour_cell.visible = 1;
   light_upd_queue_1 =
-     ctr_queue_new (sizeof (ctr_light_item),
+     vox_queue_new (sizeof (vox_light_item),
                     CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE * 9 * 2);
   light_upd_queue_2 =
-     ctr_queue_new (sizeof (ctr_light_item),
+     vox_queue_new (sizeof (vox_light_item),
                     CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE * 9 * 2);
 }
 
 // Clears light queues for light computation.
-void ctr_world_light_upd_start ()
+void vox_world_light_upd_start ()
 {
   light_upd_queue = light_upd_queue_1;
-  ctr_queue_clear (light_upd_queue_1);
-  ctr_queue_clear (light_upd_queue_2);
+  vox_queue_clear (light_upd_queue_1);
+  vox_queue_clear (light_upd_queue_2);
 }
 
 // Select light queue used.
-void ctr_world_light_select_queue (int i)
+void vox_world_light_select_queue (int i)
 {
   light_upd_queue = i > 0 ? light_upd_queue_2 : light_upd_queue_1;
 }
 
 // Store item in the queue.
-void ctr_world_light_enqueue (int x, int y, int z, unsigned char light)
+void vox_world_light_enqueue (int x, int y, int z, unsigned char light)
 {
-  ctr_light_item it;
+  vox_light_item it;
   it.x = x;
   it.y = y;
   it.z = z;
   it.lv = light;
-  ctr_queue_enqueue (light_upd_queue, &it);
+  vox_queue_enqueue (light_upd_queue, &it);
   //d// printf ("light upd enqueue %d,%d,%d: %d\n", x, y, z, light);
 }
 
 // Freeze current queue state.
-void ctr_world_light_freeze_queue ()
+void vox_world_light_freeze_queue ()
 {
-  ctr_queue_freeze (light_upd_queue);
+  vox_queue_freeze (light_upd_queue);
 }
 
 // Thaw current queue state.
-void ctr_world_light_thaw_queue ()
+void vox_world_light_thaw_queue ()
 {
-  ctr_queue_thaw (light_upd_queue);
+  vox_queue_thaw (light_upd_queue);
 }
 
 // Enqueue neighbor cells.
-void ctr_world_light_enqueue_neighbours (int x, int y, int z, unsigned char light)
+void vox_world_light_enqueue_neighbours (int x, int y, int z, unsigned char light)
 {
-  ctr_world_light_enqueue (x + 1, y, z, light);
-  ctr_world_light_enqueue (x - 1, y, z, light);
-  ctr_world_light_enqueue (x, y + 1, z, light);
-  ctr_world_light_enqueue (x, y - 1, z, light);
-  ctr_world_light_enqueue (x, y, z + 1, light);
-  ctr_world_light_enqueue (x, y, z - 1, light);
+  vox_world_light_enqueue (x + 1, y, z, light);
+  vox_world_light_enqueue (x - 1, y, z, light);
+  vox_world_light_enqueue (x, y + 1, z, light);
+  vox_world_light_enqueue (x, y - 1, z, light);
+  vox_world_light_enqueue (x, y, z + 1, light);
+  vox_world_light_enqueue (x, y, z - 1, light);
 }
 
-int ctr_world_light_dequeue (int *x, int *y, int *z, unsigned char *light)
+int vox_world_light_dequeue (int *x, int *y, int *z, unsigned char *light)
 {
-  ctr_light_item *it = ctr_queue_dequeue (light_upd_queue);
+  vox_light_item *it = vox_queue_dequeue (light_upd_queue);
   if (it)
     {
       *x = it->x;
@@ -188,7 +188,7 @@ int ctr_world_light_dequeue (int *x, int *y, int *z, unsigned char *light)
   return it != 0;
 }
 
-void ctr_world_emit_chunk_change (int x, int y, int z)
+void vox_world_emit_chunk_change (int x, int y, int z)
 {
   if (WORLD.chunk_change_cb)
     {
@@ -207,7 +207,7 @@ void ctr_world_emit_chunk_change (int x, int y, int z)
     }
 }
 
-void ctr_world_emit_active_cell_change (int x, int y, int z, ctr_cell *c, SV *sv)
+void vox_world_emit_active_cell_change (int x, int y, int z, vox_cell *c, SV *sv)
 {
   if (WORLD.active_cell_change_cb)
     {
@@ -229,7 +229,7 @@ void ctr_world_emit_active_cell_change (int x, int y, int z, ctr_cell *c, SV *sv
     }
 }
 
-ctr_obj_attr *ctr_world_get_attr (unsigned int type)
+vox_obj_attr *vox_world_get_attr (unsigned int type)
 {
   return &(OBJ_ATTR_MAP[type]);
 }
@@ -237,18 +237,18 @@ ctr_obj_attr *ctr_world_get_attr (unsigned int type)
 /* An active cell is a cell that has an entity
  * associated to it in the perl data structure in the server.
  */
-int ctr_world_is_active (unsigned int type)
+int vox_world_is_active (unsigned int type)
 {
-  ctr_obj_attr *a = ctr_world_get_attr (type);
+  vox_obj_attr *a = vox_world_get_attr (type);
   return a->active;
 }
 
-void ctr_world_set_object_type (
+void vox_world_set_object_type (
         unsigned int type, unsigned int transparent, unsigned int blocking,
         unsigned int has_txt, unsigned int active,
         double uv0, double uv1, double uv2, double uv3)
 {
-  ctr_obj_attr *oa = ctr_world_get_attr (type);
+  vox_obj_attr *oa = vox_world_get_attr (type);
   oa->transparent = transparent;
   oa->blocking    = blocking;
   oa->has_txt     = has_txt;
@@ -259,9 +259,9 @@ void ctr_world_set_object_type (
   oa->uv[3]       = uv3;
 }
 
-void ctr_world_set_object_model (unsigned int type, unsigned int dim, AV *blocks)
+void vox_world_set_object_model (unsigned int type, unsigned int dim, AV *blocks)
 {
-  ctr_obj_attr *oa = ctr_world_get_attr (type);
+  vox_obj_attr *oa = vox_world_get_attr (type);
   oa->model        = 1;
   oa->model_dim    = dim;
 
@@ -279,7 +279,7 @@ void ctr_world_set_object_model (unsigned int type, unsigned int dim, AV *blocks
     }
 }
 
-int ctr_set_cell_from_data (ctr_cell *c, unsigned char *ptr)
+int vox_set_cell_from_data (vox_cell *c, unsigned char *ptr)
 {
  //d//printf ("CELL dATA %p: %02x %02x %02x %02x\n", c, *ptr, *(ptr + 1), *(ptr + 2), *(ptr + 3));
   unsigned short *sptr = (short *) ptr;
@@ -303,7 +303,7 @@ int ctr_set_cell_from_data (ctr_cell *c, unsigned char *ptr)
   return chg;
 }
 
-void ctr_get_data_from_cell (ctr_cell *c, unsigned char *ptr)
+void vox_get_data_from_cell (vox_cell *c, unsigned char *ptr)
 {
   unsigned char *optr = ptr;
   unsigned short *sptr = (short *) ptr;
@@ -318,7 +318,7 @@ void ctr_get_data_from_cell (ctr_cell *c, unsigned char *ptr)
  //d//printf ("CELL GET DATA %p: %02x %02x %02x %02x\n", c, *optr, *(optr + 1), *(optr + 2), *(optr + 3));
 }
 
-void ctr_chunk_clear_changes (ctr_chunk *chnk)
+void vox_chunk_clear_changes (vox_chunk *chnk)
 {
 #if 0
   chnk->changes = 0;
@@ -326,11 +326,11 @@ void ctr_chunk_clear_changes (ctr_chunk *chnk)
 }
 
 #if 0
-void ctr_chunk_cell_changed (ctr_chunk *chnk, unsigned int x, unsigned int y, unsigned int z) 
+void vox_chunk_cell_changed (vox_chunk *chnk, unsigned int x, unsigned int y, unsigned int z) 
 {
   if (chnk->changes < MAX_CHUNK_CHANGES)
     {
-      ctr_chunk_changed_cell *cc = &(chnk->changed_cells[chnk->changes++]);
+      vox_chunk_changed_cell *cc = &(chnk->changed_cells[chnk->changes++]);
       cc->rx = x;
       cc->ry = y;
       cc->rz = z;
@@ -340,13 +340,13 @@ void ctr_chunk_cell_changed (ctr_chunk *chnk, unsigned int x, unsigned int y, un
 }
 #endif
 
-ctr_cell *ctr_chunk_cell_at_rel (ctr_chunk *chnk, unsigned int x, unsigned int y, unsigned int z)
+vox_cell *vox_chunk_cell_at_rel (vox_chunk *chnk, unsigned int x, unsigned int y, unsigned int z)
 {
   unsigned int offs = REL_POS2OFFS (x, y, z);
   return &(chnk->cells[offs]);
 }
 
-ctr_cell *ctr_chunk_cell_at_abs (ctr_chunk *chnk, double x, double y, double z)
+vox_cell *vox_chunk_cell_at_abs (vox_chunk *chnk, double x, double y, double z)
 {
   vec3_init (pos, x, y, z);
   vec3_s_div (pos, CHUNK_SIZE);
@@ -362,15 +362,15 @@ ctr_cell *ctr_chunk_cell_at_abs (ctr_chunk *chnk, double x, double y, double z)
   return &(chnk->cells[offs]);
 }
 
-int ctr_world_cell_transparent (ctr_cell *c)
+int vox_world_cell_transparent (vox_cell *c)
 {
-  ctr_obj_attr *oa = ctr_world_get_attr (c->type);
+  vox_obj_attr *oa = vox_world_get_attr (c->type);
   return oa->transparent;
 }
 
 
-ctr_cell *
-ctr_world_chunk_neighbour_cell (ctr_chunk *c, int x, int y, int z, ctr_chunk *neigh_chunk)
+vox_cell *
+vox_world_chunk_neighbour_cell (vox_chunk *c, int x, int y, int z, vox_chunk *neigh_chunk)
 {
   if (   x < 0 || y < 0 || z < 0
       || x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE)
@@ -395,34 +395,34 @@ ctr_world_chunk_neighbour_cell (ctr_chunk *c, int x, int y, int z, ctr_chunk *ne
 }
 
 #define LOAD_NEIGHBOUR_CHUNKS(x,y,z) \
-  ctr_chunk *top_chunk = ctr_world_chunk (x, y + 1, z, 0); \
-  ctr_chunk *bot_chunk = ctr_world_chunk (x, y - 1, z, 0); \
-  ctr_chunk *left_chunk = ctr_world_chunk (x - 1, y, z, 0); \
-  ctr_chunk *right_chunk = ctr_world_chunk (x + 1, y, z, 0); \
-  ctr_chunk *front_chunk = ctr_world_chunk (x, y, z - 1, 0); \
-  ctr_chunk *back_chunk = ctr_world_chunk (x, y, z + 1, 0);
+  vox_chunk *top_chunk = vox_world_chunk (x, y + 1, z, 0); \
+  vox_chunk *bot_chunk = vox_world_chunk (x, y - 1, z, 0); \
+  vox_chunk *left_chunk = vox_world_chunk (x - 1, y, z, 0); \
+  vox_chunk *right_chunk = vox_world_chunk (x + 1, y, z, 0); \
+  vox_chunk *front_chunk = vox_world_chunk (x, y, z - 1, 0); \
+  vox_chunk *back_chunk = vox_world_chunk (x, y, z + 1, 0);
 
 #define GET_NEIGHBOURS(c, x,y,z) \
-  ctr_cell *top   = ctr_world_chunk_neighbour_cell (c, x, y + 1, z, top_chunk); \
-  ctr_cell *bot   = ctr_world_chunk_neighbour_cell (c, x, y - 1, z, bot_chunk); \
-  ctr_cell *left  = ctr_world_chunk_neighbour_cell (c, x - 1, y, z, left_chunk); \
-  ctr_cell *right = ctr_world_chunk_neighbour_cell (c, x + 1, y, z, right_chunk); \
-  ctr_cell *front = ctr_world_chunk_neighbour_cell (c, x, y, z - 1, front_chunk); \
-  ctr_cell *back  = ctr_world_chunk_neighbour_cell (c, x, y, z + 1, back_chunk);
+  vox_cell *top   = vox_world_chunk_neighbour_cell (c, x, y + 1, z, top_chunk); \
+  vox_cell *bot   = vox_world_chunk_neighbour_cell (c, x, y - 1, z, bot_chunk); \
+  vox_cell *left  = vox_world_chunk_neighbour_cell (c, x - 1, y, z, left_chunk); \
+  vox_cell *right = vox_world_chunk_neighbour_cell (c, x + 1, y, z, right_chunk); \
+  vox_cell *front = vox_world_chunk_neighbour_cell (c, x, y, z - 1, front_chunk); \
+  vox_cell *back  = vox_world_chunk_neighbour_cell (c, x, y, z + 1, back_chunk);
 
 
 #define GET_LOCAL_NEIGHBOURS(c, x,y,z) \
-  ctr_cell *top   = ctr_world_chunk_neighbour_cell (c, x, y + 1, z, 0); \
-  ctr_cell *bot   = ctr_world_chunk_neighbour_cell (c, x, y - 1, z, 0); \
-  ctr_cell *left  = ctr_world_chunk_neighbour_cell (c, x - 1, y, z, 0); \
-  ctr_cell *right = ctr_world_chunk_neighbour_cell (c, x + 1, y, z, 0); \
-  ctr_cell *front = ctr_world_chunk_neighbour_cell (c, x, y, z - 1, 0); \
-  ctr_cell *back  = ctr_world_chunk_neighbour_cell (c, x, y, z + 1, 0);
+  vox_cell *top   = vox_world_chunk_neighbour_cell (c, x, y + 1, z, 0); \
+  vox_cell *bot   = vox_world_chunk_neighbour_cell (c, x, y - 1, z, 0); \
+  vox_cell *left  = vox_world_chunk_neighbour_cell (c, x - 1, y, z, 0); \
+  vox_cell *right = vox_world_chunk_neighbour_cell (c, x + 1, y, z, 0); \
+  vox_cell *front = vox_world_chunk_neighbour_cell (c, x, y, z - 1, 0); \
+  vox_cell *back  = vox_world_chunk_neighbour_cell (c, x, y, z + 1, 0);
 
 /* Calculate the visibility of the blocks. If a block is surrounded by
  * 6 non transparent blocks it's considered non visible.
  */
-void ctr_world_chunk_calc_visibility (ctr_chunk *chnk)
+void vox_world_chunk_calc_visibility (vox_chunk *chnk)
 {
   int x, y, z;
   for (z = 0; z < CHUNK_SIZE; z++)
@@ -438,28 +438,28 @@ void ctr_world_chunk_calc_visibility (ctr_chunk *chnk)
     for (y = 0; y < CHUNK_SIZE; y++)
       for (x = 0; x < CHUNK_SIZE; x++)
         {
-          ctr_cell *cell = &(chnk->cells[REL_POS2OFFS(x,y,z)]);
+          vox_cell *cell = &(chnk->cells[REL_POS2OFFS(x,y,z)]);
           if (cell->type == 0)
             continue;
 
           // afraid of slowness to not use GET_NEIGHBOURS...
           GET_LOCAL_NEIGHBOURS(chnk, x, y, z);
-          if (ctr_world_cell_transparent (top))
+          if (vox_world_cell_transparent (top))
             { cell->visible = 1; continue; }
-          if (ctr_world_cell_transparent (bot))
+          if (vox_world_cell_transparent (bot))
             { cell->visible = 1; continue; }
-          if (ctr_world_cell_transparent (left))
+          if (vox_world_cell_transparent (left))
             { cell->visible = 1; continue; }
-          if (ctr_world_cell_transparent (right))
+          if (vox_world_cell_transparent (right))
             { cell->visible = 1; continue; }
-          if (ctr_world_cell_transparent (front))
+          if (vox_world_cell_transparent (front))
             { cell->visible = 1; continue; }
-          if (ctr_world_cell_transparent (back))
+          if (vox_world_cell_transparent (back))
             { cell->visible = 1; continue; }
         }
 }
 
-int ctr_world_set_chunk_from_data (ctr_chunk *chnk, unsigned char *data, unsigned int len)
+int vox_world_set_chunk_from_data (vox_chunk *chnk, unsigned char *data, unsigned int len)
 {
   unsigned int x, y, z;
   int neigh_chunks = 0;
@@ -470,7 +470,7 @@ int ctr_world_set_chunk_from_data (ctr_chunk *chnk, unsigned char *data, unsigne
         {
           unsigned int offs = REL_POS2OFFS (x, y, z);
           assert (len > (offs * 4) + 3);
-          int chg = ctr_set_cell_from_data (&(chnk->cells[offs]), data + (offs * 4));
+          int chg = vox_set_cell_from_data (&(chnk->cells[offs]), data + (offs * 4));
           if (chg)
             {
               if (x == 0)
@@ -491,7 +491,7 @@ int ctr_world_set_chunk_from_data (ctr_chunk *chnk, unsigned char *data, unsigne
   return neigh_chunks;
 }
 
-void ctr_world_get_chunk_data (ctr_chunk *chnk, unsigned char *data)
+void vox_world_get_chunk_data (vox_chunk *chnk, unsigned char *data)
 {
   unsigned int x, y, z;
   for (z = 0; z < CHUNK_SIZE; z++)
@@ -499,74 +499,74 @@ void ctr_world_get_chunk_data (ctr_chunk *chnk, unsigned char *data)
       for (x = 0; x < CHUNK_SIZE; x++)
         {
           unsigned int offs = REL_POS2OFFS (x, y, z);
-          ctr_get_data_from_cell (&(chnk->cells[offs]), data + (offs * 4));
+          vox_get_data_from_cell (&(chnk->cells[offs]), data + (offs * 4));
         }
 }
 
 static int chnk_alloc = 0;
 
-ctr_chunk *ctr_world_chunk (int x, int y, int z, int alloc)
+vox_chunk *vox_world_chunk (int x, int y, int z, int alloc)
 {
-  ctr_axis_array *xn = (ctr_axis_array *) ctr_axis_get (WORLD.y, y);
+  vox_axis_array *xn = (vox_axis_array *) vox_axis_get (WORLD.y, y);
   if (!xn)
     {
       if (alloc)
         {
-          xn = ctr_axis_array_new ();
-          ctr_axis_add (WORLD.y, y, xn);
+          xn = vox_axis_array_new ();
+          vox_axis_add (WORLD.y, y, xn);
         }
       else
         return 0;
     }
 
-  ctr_axis_array *zn = (ctr_axis_array *) ctr_axis_get (xn, x);
+  vox_axis_array *zn = (vox_axis_array *) vox_axis_get (xn, x);
   if (!zn)
     {
       if (alloc)
         {
-          zn = ctr_axis_array_new ();
-          ctr_axis_add (xn, x, zn);
+          zn = vox_axis_array_new ();
+          vox_axis_add (xn, x, zn);
         }
       else
         return 0;
     }
 
-  ctr_chunk *c = (ctr_chunk *) ctr_axis_get (zn, z);
+  vox_chunk *c = (vox_chunk *) vox_axis_get (zn, z);
   if (alloc && !c)
     {
-      c = safemalloc (sizeof (ctr_chunk));
-      memset (c, 0, sizeof (ctr_chunk));
+      c = safemalloc (sizeof (vox_chunk));
+      memset (c, 0, sizeof (vox_chunk));
       chnk_alloc++;
       //printf ("ALLOC CHUNK %d %d %d (%d)\n", x, y, z, chnk_alloc);
       c->x = x;
       c->y = y;
       c->z = z;
-      ctr_axis_add (zn, z, c);
+      vox_axis_add (zn, z, c);
     }
 
   return c;
 }
 
-ctr_chunk *ctr_world_chunk_at (double x, double y, double z, int alloc)
+vox_chunk *vox_world_chunk_at (double x, double y, double z, int alloc)
 {
   vec3_init (pos, x, y, z);
   vec3_s_div (pos, CHUNK_SIZE);
   vec3_floor (pos);
-  return ctr_world_chunk (pos[0], pos[1], pos[2], alloc);
+  return vox_world_chunk (pos[0], pos[1], pos[2], alloc);
 }
 
-void ctr_world_purge_chunk (int x, int y, int z)
+void vox_world_purge_chunk (int x, int y, int z)
 {
   //printf ("PURGE CHUNK %d %d %d\n", x, y, z);
-  ctr_axis_array *xn = (ctr_axis_array *) ctr_axis_get (WORLD.y, y);
+  vox_axis_array *xn = (vox_axis_array *) vox_axis_get (WORLD.y, y);
   if (!xn)
     return;
 
-  ctr_axis_array *zn = (ctr_axis_array *) ctr_axis_get (xn, x);
+  vox_axis_array *zn = (vox_axis_array *) vox_axis_get (xn, x);
   if (!zn)
     return;
 
-  ctr_chunk *c = (ctr_chunk *) ctr_axis_remove (zn, z);
+  vox_chunk *c = (vox_chunk *) vox_axis_remove (zn, z);
   if (c)
     {
       chnk_alloc--;
@@ -575,25 +575,25 @@ void ctr_world_purge_chunk (int x, int y, int z)
 }
 
 // Haven't tested this function in a long time now. Not sure if it still works :)
-void ctr_world_dump ()
+void vox_world_dump ()
 {
   unsigned int x, y, z;
   printf ("WORLD:\n");
   for (y = 0; y < WORLD.y->len; y++)
     {
-      ctr_axis_node *any = &(WORLD.y->nodes[y]);
-      ctr_axis_array *xa = (ctr_axis_array *) any->ptr;
+      vox_axis_node *any = &(WORLD.y->nodes[y]);
+      vox_axis_array *xa = (vox_axis_array *) any->ptr;
 
       for (x = 0; x < xa->len; x++)
         {
-          ctr_axis_node *anx = &(xa->nodes[x]);
-          ctr_axis_array *za = (ctr_axis_array *) anx->ptr;
+          vox_axis_node *anx = &(xa->nodes[x]);
+          vox_axis_array *za = (vox_axis_array *) anx->ptr;
           if (za)
             {
               for (z = 0; z < za->len; z++)
                 {
-                  ctr_axis_node *anz = &(za->nodes[z]);
-                  ctr_chunk *cnk = (ctr_chunk *) anz->ptr;
+                  vox_axis_node *anz = &(za->nodes[z]);
+                  vox_chunk *cnk = (vox_chunk *) anz->ptr;
                   printf ("[%d %d %d] %p(%d,%d,%d)\n", anx->coord, any->coord, anz->coord, anz->ptr, cnk->x, cnk->y, cnk->z);
                 }
             }

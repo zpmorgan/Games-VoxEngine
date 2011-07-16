@@ -1825,7 +1825,7 @@ sub handle_command {
                my ($cnt, $ent) = $self->{pl}->{inv}->remove ($invid, $num);
                if ($cnt) {
                   my $cnt_added = $ps_hdl->add ($invid, $ent ? $ent : $num);
-                  ctr_log (debug => "pattern_storage: transfer %s from inv %d added, %d num", $invid, $cnt_added, $num);
+                  vox_log (debug => "pattern_storage: transfer %s from inv %d added, %d num", $invid, $cnt_added, $num);
                   my $put_back = $num - $cnt_added;
                   if ($cnt_added) {
                      $self->{pl}->msg (
@@ -1856,7 +1856,7 @@ sub handle_command {
                my ($cnt, $ent) = $ps_hdl->remove ($invid, $num);
                if ($cnt) {
                   my $cnt_added = $self->{pl}->{inv}->add ($invid, $ent ? $ent : $num);
-                  ctr_log (debug => "pattern_storage: transfer %s to inv %d added, %d num", $invid, $cnt_added, $num);
+                  vox_log (debug => "pattern_storage: transfer %s to inv %d added, %d num", $invid, $cnt_added, $num);
                   my $put_back = $num - $cnt_added;
                   if ($cnt_added) {
                      $self->{pl}->msg (

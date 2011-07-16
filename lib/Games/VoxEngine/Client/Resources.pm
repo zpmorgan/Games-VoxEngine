@@ -175,14 +175,14 @@ sub dump_resources {
 
    for (@{$self->{resource}}) {
       if ($_->{type} eq 'object') {
-         ctr_log (debug => "object: %s", JSON->new->pretty->encode ($_));
+         vox_log (debug => "object: %s", JSON->new->pretty->encode ($_));
       } elsif ($_->{type} eq 'texture_mapping') {
-         ctr_log (debug => "txture_mapping: %s", JSON->new->pretty->allow_blessed->encode ($_));
+         vox_log (debug => "txture_mapping: %s", JSON->new->pretty->allow_blessed->encode ($_));
       } else {
-         ctr_log (debug => "res(%s,%s)[%d]", $_->{id}, $_->{type}, length ($_->{data}));
+         vox_log (debug => "res(%s,%s)[%d]", $_->{id}, $_->{type}, length ($_->{data}));
       }
    }
-   ctr_log (debug => "obj2txt: %s", JSON->new->pretty->allow_blessed->encode ($self->{obj2txt}));
+   vox_log (debug => "obj2txt: %s", JSON->new->pretty->allow_blessed->encode ($self->{obj2txt}));
 }
 
 sub set_resource_data {

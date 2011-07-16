@@ -21,19 +21,19 @@
  * coordinate axis. The nesting of this arrays is done in world.c.
  */
 
-typedef struct _ctr_axis_node {
+typedef struct _vox_axis_node {
     int coord;
     void *ptr;
-} ctr_axis_node;
+} vox_axis_node;
 
-typedef struct _ctr_axis_array {
-   ctr_axis_node *nodes;
+typedef struct _vox_axis_array {
+   vox_axis_node *nodes;
    unsigned int len;
    unsigned int alloc;
-} ctr_axis_array;
+} vox_axis_array;
 
 
-void ctr_axis_array_grow (ctr_axis_array *arr, unsigned int min_size)
+void vox_axis_array_grow (vox_axis_array *arr, unsigned int min_size)
 {
   if (arr->alloc > min_size)
     return;
@@ -41,8 +41,8 @@ void ctr_axis_array_grow (ctr_axis_array *arr, unsigned int min_size)
   if (arr->alloc == 0)
     {
       arr->alloc = 64;
-      arr->nodes = safemalloc (sizeof (ctr_axis_node) * arr->alloc);
-      memset (arr->nodes, 0, sizeof (ctr_axis_node) * arr->alloc);
+      arr->nodes = safemalloc (sizeof (vox_axis_node) * arr->alloc);
+      memset (arr->nodes, 0, sizeof (vox_axis_node) * arr->alloc);
       arr->len = 0;
       return;
     }
@@ -52,25 +52,25 @@ void ctr_axis_array_grow (ctr_axis_array *arr, unsigned int min_size)
   while (arr->alloc < min_size)
     arr->alloc *= 2;
 
-  ctr_axis_node *newnodes = safemalloc (sizeof (ctr_axis_node) * arr->alloc);
+  vox_axis_node *newnodes = safemalloc (sizeof (vox_axis_node) * arr->alloc);
   assert (newnodes);
-  memset (newnodes, 0, sizeof (ctr_axis_node) * arr->alloc);
-  memcpy (newnodes, arr->nodes, sizeof (ctr_axis_node) * oa);
+  memset (newnodes, 0, sizeof (vox_axis_node) * arr->alloc);
+  memcpy (newnodes, arr->nodes, sizeof (vox_axis_node) * oa);
   safefree (arr->nodes);
   arr->nodes = newnodes;
 }
 
-ctr_axis_array *ctr_axis_array_new ()
+vox_axis_array *vox_axis_array_new ()
 {
-  ctr_axis_array *na = safemalloc (sizeof (ctr_axis_array));
-  memset (na, 0, sizeof (ctr_axis_array));
+  vox_axis_array *na = safemalloc (sizeof (vox_axis_array));
+  memset (na, 0, sizeof (vox_axis_array));
   na->len = 0;
   na->alloc = 0;
-  ctr_axis_array_grow (na, 1);
+  vox_axis_array_grow (na, 1);
   return na;
 }
 
-void ctr_axis_array_dump (ctr_axis_array *arr)
+void vox_axis_array_dump (vox_axis_array *arr)
 {
   int i;
   //d// printf ("alloc: %d\n", arr->alloc);
@@ -79,19 +79,19 @@ void ctr_axis_array_dump (ctr_axis_array *arr)
 }
 
 
-void ctr_axis_array_insert_at (ctr_axis_array *arr, unsigned int idx, int coord, void *ptr)
+void vox_axis_array_insert_at (vox_axis_array *arr, unsigned int idx, int coord, void *ptr)
 {
   if ((arr->len + 1) >= arr->alloc)
-    ctr_axis_array_grow (arr, arr->len + 1);
+    vox_axis_array_grow (arr, arr->len + 1);
 
   assert (arr->alloc >= arr->len + 1);
 
-  ctr_axis_node *an = 0;
+  vox_axis_node *an = 0;
   if (arr->len > idx)
     {
       unsigned int tail_len = arr->len - idx;
       memmove (arr->nodes + idx + 1, arr->nodes + idx,
-               sizeof (ctr_axis_node) * tail_len);
+               sizeof (vox_axis_node) * tail_len);
     }
 
   an = &(arr->nodes[idx]);
@@ -101,7 +101,7 @@ void ctr_axis_array_insert_at (ctr_axis_array *arr, unsigned int idx, int coord,
   arr->len++;
 }
 
-void *ctr_axis_array_remove_at (ctr_axis_array *arr, unsigned int idx)
+void *vox_axis_array_remove_at (vox_axis_array *arr, unsigned int idx)
 {
   assert (idx < arr->len);
   void *ptr = arr->nodes[idx].ptr;
@@ -110,14 +110,14 @@ void *ctr_axis_array_remove_at (ctr_axis_array *arr, unsigned int idx)
     {
       unsigned int tail_len = arr->len - (idx + 1);
       memmove (arr->nodes + idx, arr->nodes + idx + 1,
-                sizeof (ctr_axis_node) * tail_len);
+                sizeof (vox_axis_node) * tail_len);
     }
 
   arr->len--;
   return ptr;
 }
 
-unsigned int ctr_axis_array_find (ctr_axis_array *arr, int coord, ctr_axis_node **node)
+unsigned int vox_axis_array_find (vox_axis_array *arr, int coord, vox_axis_node **node)
 {
   *node = 0;
   if (arr->len == 0)
@@ -142,17 +142,17 @@ unsigned int ctr_axis_array_find (ctr_axis_array *arr, int coord, ctr_axis_node 
   return min;
 }
 
-void *ctr_axis_get (ctr_axis_array *arr, int coord)
+void *vox_axis_get (vox_axis_array *arr, int coord)
 {
-  ctr_axis_node *node = 0;
-  ctr_axis_array_find (arr, coord, &node);
+  vox_axis_node *node = 0;
+  vox_axis_array_find (arr, coord, &node);
   return node ? node->ptr : 0;
 }
 
-void *ctr_axis_add (ctr_axis_array *arr, int coord, void *ptr)
+void *vox_axis_add (vox_axis_array *arr, int coord, void *ptr)
 {
-  ctr_axis_node *node = 0;
-  unsigned int idx = ctr_axis_array_find (arr, coord, &node);
+  vox_axis_node *node = 0;
+  unsigned int idx = vox_axis_array_find (arr, coord, &node);
   if (node)
     {
       void *oldptr = node->ptr;
@@ -161,16 +161,16 @@ void *ctr_axis_add (ctr_axis_array *arr, int coord, void *ptr)
       return oldptr;
     }
   else
-    ctr_axis_array_insert_at (arr, idx, coord, ptr);
+    vox_axis_array_insert_at (arr, idx, coord, ptr);
 
   return 0;
 }
 
-void *ctr_axis_remove (ctr_axis_array *arr, int coord)
+void *vox_axis_remove (vox_axis_array *arr, int coord)
 {
-  ctr_axis_node *node = 0;
-  unsigned int idx = ctr_axis_array_find (arr, coord, &node);
+  vox_axis_node *node = 0;
+  unsigned int idx = vox_axis_array_find (arr, coord, &node);
   if (node)
-    return ctr_axis_array_remove_at (arr, idx);
+    return vox_axis_array_remove_at (arr, idx);
   return 0;
 }

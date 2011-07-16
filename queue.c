@@ -18,24 +18,24 @@
 /* This file holds a primitive queue implementation.
  * Mainly used by the light algorithm at the moment of this writing.
  */
-typedef struct _ctr_queue {
+typedef struct _vox_queue {
     unsigned char *data;
     unsigned char *data_end;
     unsigned int  item_size;
     unsigned int  alloc_items;
     unsigned char *start, *end;
     unsigned char *freeze_start, *freeze_end;
-} ctr_queue;
+} vox_queue;
 
-void ctr_queue_clear (ctr_queue *q)
+void vox_queue_clear (vox_queue *q)
 {
   q->start = q->data;
   q->end   = q->data;
 }
 
-ctr_queue *ctr_queue_new (unsigned int item_size, unsigned int alloc_items)
+vox_queue *vox_queue_new (unsigned int item_size, unsigned int alloc_items)
 {
-  ctr_queue *q = safemalloc (sizeof (ctr_queue));
+  vox_queue *q = safemalloc (sizeof (vox_queue));
   q->freeze_start = 0;
   q->freeze_end   = 0;
   q->data = 0;
@@ -51,18 +51,18 @@ ctr_queue *ctr_queue_new (unsigned int item_size, unsigned int alloc_items)
   q->item_size   = item_size;
   q->alloc_items = alloc_items;
 
-  ctr_queue_clear (q);
+  vox_queue_clear (q);
 
   return q;
 }
 
-void ctr_queue_free (ctr_queue *q)
+void vox_queue_free (vox_queue *q)
 {
   safefree (q->data);
   safefree (q);
 }
 
-void ctr_queue_enqueue (ctr_queue *q, void *item)
+void vox_queue_enqueue (vox_queue *q, void *item)
 {
   memcpy (q->end, item, q->item_size);
 
@@ -78,19 +78,19 @@ void ctr_queue_enqueue (ctr_queue *q, void *item)
 /* This function stores the state of the queue, so
  * we can quickly restore the queue using the queue_thaw method.
  */
-void ctr_queue_freeze (ctr_queue *q)
+void vox_queue_freeze (vox_queue *q)
 {
   q->freeze_start = q->start;
   q->freeze_end   = q->end;
 }
 
-void ctr_queue_thaw (ctr_queue *q)
+void vox_queue_thaw (vox_queue *q)
 {
   q->start = q->freeze_start;
   q->end   = q->freeze_end;
 }
 
-void *ctr_queue_dequeue (ctr_queue *q)
+void *vox_queue_dequeue (vox_queue *q)
 {
   if (q->start == q->end)
     return 0;

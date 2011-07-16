@@ -68,15 +68,15 @@ sub init {
    $RES->load_objects;
 
    $self->{sigint} = AE::signal INT => sub {
-      ctr_log (info => "received signal INT, saving maps and players and shutting down...");
+      vox_log (info => "received signal INT, saving maps and players and shutting down...");
       $self->shutdown;
    };
    $self->{sigterm} = AE::signal TERM => sub {
-      ctr_log (info => "received signal TERM, saving maps and players and shutting down...");
+      vox_log (info => "received signal TERM, saving maps and players and shutting down...");
       $self->shutdown;
    };
 
-   ctr_log (info => "Initiated world.");
+   vox_log (info => "Initiated world.");
 
 }
 
@@ -102,7 +102,7 @@ sub listen {
       $self->handle_protocol ($cid);
    };
 
-   ctr_log (info => "Listening for clients on port %d", $self->{port});
+   vox_log (info => "Listening for clients on port %d", $self->{port});
 }
 
 sub shutdown {
@@ -130,7 +130,7 @@ sub send_client {
    $self->{clients}->{$cid}->push_write (packstring => "N", packet2data ($hdr, $body));
 
    if (!grep { $hdr->{cmd} eq $_ } qw/chunk activate_ui/) {
-      ctr_log (network => "send[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
+      vox_log (network => "send[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
    }
 }
 
@@ -174,7 +174,7 @@ sub client_disconnected : event_cb {
    $pl->logout if $pl;
    delete $self->{player_guards}->{$cid};
    delete $self->{clients}->{$cid};
-   ctr_log (info => "Client disconnected: %s", $cid);
+   vox_log (info => "Client disconnected: %s", $cid);
 }
 
 sub schedule_chunk_upd {
@@ -206,7 +206,7 @@ sub players_near_pos {
 
 sub client_connected : event_cb {
    my ($self, $cid) = @_;
-   ctr_log (info => "Client connected: %s", $cid);
+   vox_log (info => "Client connected: %s", $cid);
 }
 
 sub handle_player_packet : event_cb {
@@ -273,7 +273,7 @@ sub handle_packet : event_cb {
    my ($self, $cid, $hdr, $body) = @_;
 
    if ($hdr->{cmd} ne 'p') {
-      ctr_log (network => "recv[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
+      vox_log (network => "recv[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
    }
 
    if ($hdr->{cmd} eq 'hello') {

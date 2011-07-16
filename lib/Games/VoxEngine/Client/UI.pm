@@ -534,11 +534,11 @@ sub update {
    # window_size_inside is initialized here, and window_padding too
    $self->prepare_sdl_surface ($win->{bgcolor}, $size); # creates a new sdl surface for this window
 
-   ctr_prof ("draw elements", sub {
+   vox_prof ("draw elements", sub {
       $self->draw_element ($layout, [0, 0]);
    });
 
-   ctr_prof ("render_view", sub {
+   vox_prof ("render_view", sub {
       $self->render_view; # refresh rendering to opengl texture
    });
 }
@@ -601,7 +601,7 @@ sub prepare_sdl_surface {
       $self->{gl_texture} = 0;
    }
 
-   ctr_prof ("prepsurf($size)", sub {
+   vox_prof ("prepsurf($size)", sub {
       my $clr = SDL::Video::map_RGB (
          $self->{sdl_surf}->format, _clr2color ($clear_color),
       );
@@ -846,7 +846,7 @@ sub do_multiline {
 
 sub input_key_press : event_cb {
    my ($self, $key, $name, $unicode, $rhandled) = @_;
-   ctr_log (debug => "UI(%s) keypress %s/%s/%d", $self->{name}, $key, $name, ord $unicode);
+   vox_log (debug => "UI(%s) keypress %s/%s/%d", $self->{name}, $key, $name, ord $unicode);
    my $cmd;
 
    my $el = $self->{active_element};

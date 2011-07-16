@@ -21,10 +21,10 @@ use POSIX qw/floor/;
 use Time::HiRes qw/time/;
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/
-   ctr_log
-   ctr_cond_log
-   ctr_enable_log_categories
-   ctr_disable_log_categories
+   vox_log
+   vox_cond_log
+   vox_enable_log_categories
+   vox_disable_log_categories
 /;
 
 =head1 NAME
@@ -45,7 +45,7 @@ our %CATEGORIES;
 our $LOGFILE;
 our $LOGFILE_FH;
 
-sub ctr_enable_log_categories {
+sub vox_enable_log_categories {
    my (@cats) = @_;
 
    if (grep { $_ eq 'all' } @cats) {
@@ -54,7 +54,7 @@ sub ctr_enable_log_categories {
       $CATEGORIES{$_} = 1 for @cats;
    }
 }
-sub ctr_disable_log_categories {
+sub vox_disable_log_categories {
    my (@cats) = @_;
 
    if (grep { $_ eq 'all' } @cats) {
@@ -64,7 +64,7 @@ sub ctr_disable_log_categories {
    }
 }
 
-sub ctr_cond_log {
+sub vox_cond_log {
    my ($category, $cb, $elsecb) = @_;
 
    if ($CATEGORIES{$category} || $CATEGORIES{all}) {
@@ -74,7 +74,7 @@ sub ctr_cond_log {
    }
 }
 
-sub ctr_log {
+sub vox_log {
    my ($category, $fmt, @args) = @_;
    return unless $CATEGORIES{$category} || $CATEGORIES{all};
 

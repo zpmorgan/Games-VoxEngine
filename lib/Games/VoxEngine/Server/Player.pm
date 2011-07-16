@@ -63,14 +63,14 @@ sub _check_file {
       my $cont = do { local $/; <$plf> };
       my $data = eval { JSON->new->relaxed->utf8->decode ($cont) };
       if ($@) {
-         ctr_log (error => "Couldn't parse player data from file '%s': %s", $file, $!);
+         vox_log (error => "Couldn't parse player data from file '%s': %s", $file, $!);
          return;
       }
 
       return $data
 
    } else {
-      ctr_log (error => "Couldn't open player file '%s': %s", $file, $!);
+      vox_log (error => "Couldn't open player file '%s': %s", $file, $!);
       return;
    }
 }
@@ -122,19 +122,19 @@ sub save {
       close $plf;
 
       if (-s "$file~" != length ($cont)) {
-         ctr_log (error => "Couldn't write out player file completely to '%s': %s", $file, $!);
+         vox_log (error => "Couldn't write out player file completely to '%s': %s", $file, $!);
          return;
       }
 
       unless (rename "$file~", "$file") {
-         ctr_log (error => "Couldn't rename $file~ to $file: $!");;
+         vox_log (error => "Couldn't rename $file~ to $file: $!");;
          return;
       }
 
-      ctr_log (info => "Saved player %s to %s", $self->{name}, $file);
+      vox_log (info => "Saved player %s to %s", $self->{name}, $file);
 
    } else {
-      ctr_log (error => "Couldn't open player file $file~ for writing: $!");
+      vox_log (error => "Couldn't open player file $file~ for writing: $!");
       return;
    }
 }
@@ -401,7 +401,7 @@ sub logout {
    delete $self->{death_timer};
    delete $self->{tick_timer};
 
-   ctr_log (info => "Player %s logged out", $self->{name});
+   vox_log (info => "Player %s logged out", $self->{name});
    #d# print Devel::FindRef::track $self;
 }
 
@@ -411,7 +411,7 @@ sub update_pos {
    my ($self, $pos, $lv) = @_;
 
    if ($self->{freeze_update_pos} ne '') {
-      ctr_log (debug => "update_pos thrown away, awaiting teleport confirmation!");
+      vox_log (debug => "update_pos thrown away, awaiting teleport confirmation!");
       return;
    }
 
@@ -540,7 +540,7 @@ sub push_chunk_to_network {
    splice @upds, $PL_MAX_QUEUE_SIZE;
 
    my $cnt = scalar @upds;
-   ctr_log (debug => "player %s: %d chunk updates in queue", $self->{name}, $cnt)
+   vox_log (debug => "player %s: %d chunk updates in queue", $self->{name}, $cnt)
       if $cnt;
    for (my $i = 0; $i < 5; $i++) {
       my $q = shift @upds
@@ -628,7 +628,7 @@ sub debug_at {
    });
    world_mutate_at ($pos, sub {
       my ($data) = @_;
-      ctr_log (debug => "player %s: debug position @$pos: @$data", $self->{name});
+      vox_log (debug => "player %s: debug position @$pos: @$data", $self->{name});
       if ($data->[0] == 1) {
          $data->[0] = 0;
          return 1;
@@ -909,7 +909,7 @@ sub take_assignment {
    my $vec  = vsmul (vnorm (vrand ()), $offer->{distance});
    my $wpos = vfloor (vadd ($vec, $self->get_pos_normalized));
 
-   ctr_log (debug => "took assignment at @$vec => @$wpos");
+   vox_log (debug => "took assignment at @$vec => @$wpos");
 
    my $size = $offer->{size};
    Games::VoxEngine::VolDraw::alloc ($size);
@@ -1109,7 +1109,7 @@ sub create_encounter {
    my ($teledist, $nxttime, $lifetime) =
       $Games::VoxEngine::Server::RES->encounter_values ();
 
-   ctr_log (debug => "next encounter for player %s is %d (%d, %d)", $self->{name}, $nxttime, $teledist, $lifetime);
+   vox_log (debug => "next encounter for player %s is %d (%d, %d)", $self->{name}, $nxttime, $teledist, $lifetime);
    $self->{data}->{next_encounter} = $nxttime;
 
    world_mutate_at ($new_pos, sub {
@@ -1169,7 +1169,7 @@ sub teleport {
       }
 
       unless (@$new_pos) {
-         ctr_log (error => "new position for player at @$pos had no free spot! moving him up!");
+         vox_log (error => "new position for player at @$pos had no free spot! moving him up!");
          viaddd ($pos, 0, 10, 0);
          my $t; $t = AE::timer 0, 0, sub {
             $self->teleport ($pos);
@@ -1222,7 +1222,7 @@ sub display_ui {
 sub ui_res : event_cb {
    my ($self, $ui, $cmd, $arg, $pos) = @_;
 
-   ctr_log (debug => "player %s: ui response %s: %s (%s) (@$pos)", $ui, $cmd, $arg);
+   vox_log (debug => "player %s: ui response %s: %s (%s) (@$pos)", $ui, $cmd, $arg);
 
    if (my $o = $self->{uis}->{$ui}) {
       $o->react ($cmd, $arg, $pos);
@@ -1234,7 +1234,7 @@ sub ui_res : event_cb {
 
 sub DESTROY {
    my ($self) = @_;
-   ctr_log (debug => "player %s [%s] destroyed", $self->{name}, $self);
+   vox_log (debug => "player %s [%s] destroyed", $self->{name}, $self);
 }
 
 =back

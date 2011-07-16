@@ -20,14 +20,14 @@ if ($spawn_server){
 }
 
 
-#ctr_enable_log_categories ('all');
-ctr_enable_log_categories ('info', 'error', 'warn', 'chat');
+#vox_enable_log_categories ('all');
+vox_enable_log_categories ('info', 'error', 'warn', 'chat');
 
 Games::VoxEngine::Debug::init ("client");
 
 our $game = eval { Games::VoxEngine::Client->new (auto_login => $login_name) };
 if ($@) {
-   ctr_log (error => "Couldn't initialized client: %s", $@);
+   vox_log (error => "Couldn't initialized client: %s", $@);
    exit 1;
 }
 
@@ -36,7 +36,7 @@ $game->set_exception_cb (sub {
    my ($ex, $ev) = @_;
    return if $in_ex;
    local $in_ex = 1;
-   ctr_log (error => "exception in client (%s): %s", $ev, $ex);
+   vox_log (error => "exception in client (%s): %s", $ev, $ex);
    $game->{front}->msg ("Fatal Error: Exception in client caught: $ev: $ex");
 });
 

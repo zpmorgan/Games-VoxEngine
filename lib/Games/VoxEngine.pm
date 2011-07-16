@@ -23,7 +23,7 @@ use Games::VoxEngine::Logging;
 require Exporter;
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/
-   ctr_prof
+   vox_prof
 /;
 
 our $VERSION = '0.94';
@@ -67,13 +67,13 @@ functions that are used in many places in the game.
 
 =cut
 
-sub ctr_prof {
+sub vox_prof {
    my ($name, $sub) = @_;
 
-   ctr_cond_log (profile => sub {
+   vox_cond_log (profile => sub {
       my $t1 = time;
       $sub->();
-      ctr_log (profile => "ctr_prof[%-20s] %0.4f\n", $name, time - $t1);
+      vox_log (profile => "vox_prof[%-20s] %0.4f\n", $name, time - $t1);
    }, sub { $sub->() });
 }
 
@@ -260,7 +260,7 @@ sub draw_commands {
          my $s = $wg->{sector_types}->{$type};
          my $r = $s->{region_range};
          unless ($r) {
-            ctr_log (warn => "No region range for sector type '$type' found!\n");
+            vox_log (warn => "No region range for sector type '$type' found!\n");
          }
          show_map_range (@$r);
 
@@ -271,7 +271,7 @@ sub draw_commands {
          my $s = $wg->{sector_types}->{$type};
          my $r = $s->{ranges};
          unless ($r) {
-            ctr_log (warn => "No ranges for sector type '$type' found!\n");
+            vox_log (warn => "No ranges for sector type '$type' found!\n");
          }
          show_map_range ($r->[$range_idx * 3], $r->[($range_idx * 3) + 1]);
 
@@ -317,7 +317,7 @@ ADDFUNCS
 
    $SHELL = AnyEvent::Debug::shell "unix/", $sock;
    if ($SHELL) {
-      ctr_log (info => "started shell at $sock, use with: 'socat readline $sock'\n");
+      vox_log (info => "started shell at $sock, use with: 'socat readline $sock'\n");
    }
 }
 

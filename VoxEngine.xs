@@ -48,7 +48,7 @@ double region_get_sector_value (void *reg, int x, int y, int z)
     }
 }
 
-unsigned int ctr_cone_sphere_intersect (double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_x, double sphere_y, double sphere_z, double sphere_rad)
+unsigned int vox_cone_sphere_intersect (double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_x, double sphere_y, double sphere_z, double sphere_rad)
 {
   vec3_init(cam,    cam_x, cam_y, cam_z);
   vec3_init(cam_v,  cam_v_x, cam_v_y, cam_v_z);
@@ -78,12 +78,12 @@ unsigned int ctr_cone_sphere_intersect (double cam_x, double cam_y, double cam_z
     return 0;
 }
 
-MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Math PREFIX = ctr_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Math PREFIX = vox_
 
-unsigned int ctr_cone_sphere_intersect (double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_x, double sphere_y, double sphere_z, double sphere_rad);
+unsigned int vox_cone_sphere_intersect (double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_x, double sphere_y, double sphere_z, double sphere_rad);
 
 AV *
-ctr_point_aabb_distance (double pt_x, double pt_y, double pt_z, double box_min_x, double box_min_y, double box_min_z, double box_max_x, double box_max_y, double box_max_z)
+vox_point_aabb_distance (double pt_x, double pt_y, double pt_z, double box_min_x, double box_min_y, double box_min_z, double box_max_x, double box_max_y, double box_max_z)
   CODE:
     vec3_init (pt,   pt_x, pt_y, pt_z);
     vec3_init (bmin, box_min_x, box_min_y, box_min_z);
@@ -120,7 +120,7 @@ ctr_point_aabb_distance (double pt_x, double pt_y, double pt_z, double box_min_x
 
 
 AV *
-ctr_calc_visible_chunks_at_in_cone (double pt_x, double pt_y, double pt_z, double rad, double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_rad)
+vox_calc_visible_chunks_at_in_cone (double pt_x, double pt_y, double pt_z, double rad, double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_rad)
   CODE:
     int r = rad;
 
@@ -149,7 +149,7 @@ ctr_calc_visible_chunks_at_in_cone (double pt_x, double pt_y, double pt_z, doubl
                 sphere_pos[1] += CHUNK_SIZE / 2;
                 sphere_pos[2] += CHUNK_SIZE / 2;
 
-                if (ctr_cone_sphere_intersect (
+                if (vox_cone_sphere_intersect (
                       cam_x, cam_y, cam_z, cam_v_x, cam_v_y, cam_v_z,
                       cam_fov, sphere_pos[0], sphere_pos[1], sphere_pos[2],
                       sphere_rad))
@@ -165,7 +165,7 @@ ctr_calc_visible_chunks_at_in_cone (double pt_x, double pt_y, double pt_z, doubl
     RETVAL
 
 AV *
-ctr_calc_visible_chunks_at (double pt_x, double pt_y, double pt_z, double rad)
+vox_calc_visible_chunks_at (double pt_x, double pt_y, double pt_z, double rad)
   CODE:
     int r = rad;
 
@@ -196,41 +196,41 @@ ctr_calc_visible_chunks_at (double pt_x, double pt_y, double pt_z, double rad)
   OUTPUT:
     RETVAL
 
-MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Renderer PREFIX = ctr_render_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Renderer PREFIX = vox_render_
 
-void *ctr_render_new_geom ();
+void *vox_render_new_geom ();
 
-void ctr_render_clear_geom (void *c);
+void vox_render_clear_geom (void *c);
 
-void ctr_render_draw_geom (void *c);
+void vox_render_draw_geom (void *c);
 
-void ctr_render_free_geom (void *c);
+void vox_render_free_geom (void *c);
 
-int ctr_render_chunk (int x, int y, int z, void *geom)
+int vox_render_chunk (int x, int y, int z, void *geom)
   CODE:
-    ctr_render_clear_geom (geom);
-    RETVAL = ctr_render_chunk (x, y, z, geom);
+    vox_render_clear_geom (geom);
+    RETVAL = vox_render_chunk (x, y, z, geom);
   OUTPUT:
     RETVAL
 
 void
-ctr_render_model (unsigned int type, unsigned short color, double light, unsigned int xo, unsigned int yo, unsigned int zo, void *geom, int skip, int force_model)
+vox_render_model (unsigned int type, unsigned short color, double light, unsigned int xo, unsigned int yo, unsigned int zo, void *geom, int skip, int force_model)
   CODE:
-     ctr_render_clear_geom (geom);
-     ctr_render_model (type, color, light, xo, yo, zo, geom, skip, force_model, 1);
-     ctr_render_compile_geom (geom);
+     vox_render_clear_geom (geom);
+     vox_render_model (type, color, light, xo, yo, zo, geom, skip, force_model, 1);
+     vox_render_compile_geom (geom);
 
-void ctr_render_init ();
+void vox_render_init ();
 
-void ctr_render_set_ambient_light (double l)
+void vox_render_set_ambient_light (double l)
   CODE:
-     ctr_ambient_light = l;
+     vox_ambient_light = l;
 
-MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::World PREFIX = ctr_world_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::World PREFIX = vox_world_
 
-void ctr_world_init (SV *change_cb, SV *cell_change_cb)
+void vox_world_init (SV *change_cb, SV *cell_change_cb)
   CODE:
-     ctr_world_init ();
+     vox_world_init ();
      SvREFCNT_inc (change_cb);
      WORLD.chunk_change_cb = change_cb;
      SvREFCNT_inc (cell_change_cb);
@@ -238,17 +238,17 @@ void ctr_world_init (SV *change_cb, SV *cell_change_cb)
 
 
 int
-ctr_world_has_chunk (int x, int y, int z)
+vox_world_has_chunk (int x, int y, int z)
   CODE:
-    ctr_chunk *chnk = ctr_world_chunk (x, y, z, 0);
+    vox_chunk *chnk = vox_world_chunk (x, y, z, 0);
     RETVAL = chnk ? 1 : 0;
   OUTPUT:
     RETVAL
 
 SV *
-ctr_world_get_chunk_data (int x, int y, int z)
+vox_world_get_chunk_data (int x, int y, int z)
   CODE:
-    ctr_chunk *chnk = ctr_world_chunk (x, y, z, 0);
+    vox_chunk *chnk = vox_world_chunk (x, y, z, 0);
     if (!chnk)
       {
         XSRETURN_UNDEF;
@@ -256,7 +256,7 @@ ctr_world_get_chunk_data (int x, int y, int z)
 
     int len = CHUNK_ALEN * 4;
     unsigned char *data = malloc (sizeof (unsigned char) * len);
-    ctr_world_get_chunk_data (chnk, data);
+    vox_world_get_chunk_data (chnk, data);
 
     RETVAL = newSVpv (data, len);
     free (data);
@@ -264,11 +264,11 @@ ctr_world_get_chunk_data (int x, int y, int z)
     RETVAL
 
 
-int ctr_world_set_chunk_data (int x, int y, int z, unsigned char *data, unsigned int len)
+int vox_world_set_chunk_data (int x, int y, int z, unsigned char *data, unsigned int len)
   CODE:
-    ctr_chunk *chnk = ctr_world_chunk (x, y, z, 1);
+    vox_chunk *chnk = vox_world_chunk (x, y, z, 1);
     assert (chnk);
-    RETVAL = ctr_world_set_chunk_from_data (chnk, data, len);
+    RETVAL = vox_world_set_chunk_from_data (chnk, data, len);
     int lenc = (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) * 4;
     if (lenc != len)
       {
@@ -277,15 +277,15 @@ int ctr_world_set_chunk_data (int x, int y, int z, unsigned char *data, unsigned
       }
 
     // FIXME: this needs to be done for neighborss where whe changed too!!!
-    ctr_world_chunk_calc_visibility (chnk);
+    vox_world_chunk_calc_visibility (chnk);
 
-    ctr_world_emit_chunk_change (x, y, z);
+    vox_world_emit_chunk_change (x, y, z);
 
-    //d// ctr_world_dump ();
+    //d// vox_world_dump ();
 
     /*
     unsigned char *datac = malloc (sizeof (unsigned char) * lenc);
-    ctr_world_get_chunk_data (chnk, datac);
+    vox_world_get_chunk_data (chnk, datac);
     int i;
     for (i = 0; i < lenc; i++)
       {
@@ -299,36 +299,36 @@ int ctr_world_set_chunk_data (int x, int y, int z, unsigned char *data, unsigned
   OUTPUT:
     RETVAL
 
-void ctr_world_purge_chunk (int x, int y, int z);
+void vox_world_purge_chunk (int x, int y, int z);
 
-int ctr_world_is_solid_at (double x, double y, double z)
+int vox_world_is_solid_at (double x, double y, double z)
   CODE:
     RETVAL = 1;
 
-    ctr_chunk *chnk = ctr_world_chunk_at (x, y, z, 0);
+    vox_chunk *chnk = vox_world_chunk_at (x, y, z, 0);
     if (chnk)
       {
-        ctr_cell *c = ctr_chunk_cell_at_abs (chnk, x, y, z);
-        ctr_obj_attr *attr = ctr_world_get_attr (c->type);
+        vox_cell *c = vox_chunk_cell_at_abs (chnk, x, y, z);
+        vox_obj_attr *attr = vox_world_get_attr (c->type);
         RETVAL = attr ? attr->blocking : 0;
       }
   OUTPUT:
     RETVAL
 
-void ctr_world_set_object_type (unsigned int type, unsigned int transparent, unsigned int blocking, unsigned int has_txt, unsigned int active, double uv0, double uv1, double uv2, double uv3);
+void vox_world_set_object_type (unsigned int type, unsigned int transparent, unsigned int blocking, unsigned int has_txt, unsigned int active, double uv0, double uv1, double uv2, double uv3);
 
-void ctr_world_set_object_model (unsigned int type, unsigned int dim, AV *blocks);
+void vox_world_set_object_model (unsigned int type, unsigned int dim, AV *blocks);
 
 AV *
-ctr_world_at (double x, double y, double z)
+vox_world_at (double x, double y, double z)
   CODE:
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
 
-    ctr_chunk *chnk = ctr_world_chunk_at (x, y, z, 0);
+    vox_chunk *chnk = vox_world_chunk_at (x, y, z, 0);
     if (chnk)
       {
-        ctr_cell *c = ctr_chunk_cell_at_abs (chnk, x, y, z);
+        vox_cell *c = vox_chunk_cell_at_abs (chnk, x, y, z);
         av_push (RETVAL, newSViv (c->type));
         av_push (RETVAL, newSViv (c->light));
         av_push (RETVAL, newSViv (c->meta));
@@ -340,9 +340,9 @@ ctr_world_at (double x, double y, double z)
     RETVAL
 
 AV *
-ctr_world_chunk_visible_faces (int x, int y, int z)
+vox_world_chunk_visible_faces (int x, int y, int z)
   CODE:
-    ctr_chunk *chnk = ctr_world_chunk (x, y, z, 0);
+    vox_chunk *chnk = vox_world_chunk (x, y, z, 0);
 
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
@@ -363,22 +363,22 @@ ctr_world_chunk_visible_faces (int x, int y, int z)
   OUTPUT:
     RETVAL
 
-void ctr_world_query_load_chunks (int alloc = 0);
+void vox_world_query_load_chunks (int alloc = 0);
 
-void ctr_world_query_set_at (unsigned int rel_x, unsigned int rel_y, unsigned int rel_z, AV *cell)
+void vox_world_query_set_at (unsigned int rel_x, unsigned int rel_y, unsigned int rel_z, AV *cell)
   CODE:
-    ctr_world_query_set_at_pl (rel_x, rel_y, rel_z, cell);
+    vox_world_query_set_at_pl (rel_x, rel_y, rel_z, cell);
 
-void ctr_world_query_set_at_abs (unsigned int rel_x, unsigned int rel_y, unsigned int rel_z, AV *cell)
+void vox_world_query_set_at_abs (unsigned int rel_x, unsigned int rel_y, unsigned int rel_z, AV *cell)
   CODE:
-    ctr_world_query_abs2rel (&rel_x, &rel_y, &rel_z);
-    ctr_world_query_set_at_pl (rel_x, rel_y, rel_z, cell);
+    vox_world_query_abs2rel (&rel_x, &rel_y, &rel_z);
+    vox_world_query_set_at_pl (rel_x, rel_y, rel_z, cell);
 
-void ctr_world_query_setup (int x, int y, int z, int ex, int ey, int ez);
+void vox_world_query_setup (int x, int y, int z, int ex, int ey, int ez);
 
-int ctr_world_query_desetup (int no_update = 0);
+int vox_world_query_desetup (int no_update = 0);
 
-AV *ctr_world_query_possible_light_positions ()
+AV *vox_world_query_possible_light_positions ()
   CODE:
     int xw = QUERY_CONTEXT.x_w * CHUNK_SIZE,
         yw = QUERY_CONTEXT.y_w * CHUNK_SIZE,
@@ -414,11 +414,11 @@ AV *ctr_world_query_possible_light_positions ()
                          py = y + offsets[i][1] * (m - 1),
                          pz = z + offsets[i][2] * (m - 1);
 
-                     ctr_cell *cur = ctr_world_query_cell_at (px, py, pz, 0);
+                     vox_cell *cur = vox_world_query_cell_at (px, py, pz, 0);
                      if (!cur || cur->type != 0)
                        continue;
 
-                     cur = ctr_world_query_cell_at (
+                     cur = vox_world_query_cell_at (
                        x + offsets[i][0] * m,
                        y + offsets[i][1] * m,
                        z + offsets[i][2] * m,
@@ -440,7 +440,7 @@ AV *ctr_world_query_possible_light_positions ()
   OUTPUT:
     RETVAL
 
-AV *ctr_world_find_free_spot (int x, int y, int z, int with_floor)
+AV *vox_world_find_free_spot (int x, int y, int z, int with_floor)
   CODE:
     vec3_init (pos, x, y, z);
     vec3_s_div (pos, CHUNK_SIZE);
@@ -449,15 +449,15 @@ AV *ctr_world_find_free_spot (int x, int y, int z, int with_floor)
         chnk_y = pos[1],
         chnk_z = pos[2];
 
-    ctr_world_query_setup (
+    vox_world_query_setup (
       chnk_x - 2, chnk_y - 2, chnk_z - 2,
       chnk_x + 2, chnk_y + 2, chnk_z + 2
     );
 
-    ctr_world_query_load_chunks (0);
+    vox_world_query_load_chunks (0);
 
     int cx = x, cy = y, cz = z;
-    ctr_world_query_abs2rel (&cx, &cy, &cz);
+    vox_world_query_abs2rel (&cx, &cy, &cz);
 
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
@@ -474,24 +474,24 @@ AV *ctr_world_find_free_spot (int x, int y, int z, int with_floor)
                   dy = iy + cy,
                   dz = iz + cz;
 
-              ctr_cell *cur = ctr_world_query_cell_at (dx, dy, dz, 0);
+              vox_cell *cur = vox_world_query_cell_at (dx, dy, dz, 0);
               if (!cur)
                 continue;
-              ctr_obj_attr *attr = ctr_world_get_attr (cur->type);
+              vox_obj_attr *attr = vox_world_get_attr (cur->type);
               if (attr->blocking)
                 continue;
 
-              cur = ctr_world_query_cell_at (dx, dy + 1, dz, 0);
+              cur = vox_world_query_cell_at (dx, dy + 1, dz, 0);
               if (!cur)
                 continue;
-              attr = ctr_world_get_attr (cur->type);
+              attr = vox_world_get_attr (cur->type);
               if (attr->blocking)
                 continue;
 
-              cur = ctr_world_query_cell_at (dx, dy - 1, dz, 0);
+              cur = vox_world_query_cell_at (dx, dy - 1, dz, 0);
               if (!cur)
                 continue;
-              attr = ctr_world_get_attr (cur->type);
+              attr = vox_world_get_attr (cur->type);
               if (with_floor && !attr->blocking)
                 continue;
 
@@ -504,7 +504,7 @@ AV *ctr_world_find_free_spot (int x, int y, int z, int with_floor)
   OUTPUT:
     RETVAL
 
-AV *ctr_world_get_types_in_cube (int x, int y, int z, int size, int type_match = -1)
+AV *vox_world_get_types_in_cube (int x, int y, int z, int size, int type_match = -1)
   CODE:
     vec3_init (pos1, x, y, z);
     vec3_s_div (pos1, CHUNK_SIZE);
@@ -514,15 +514,15 @@ AV *ctr_world_get_types_in_cube (int x, int y, int z, int size, int type_match =
     vec3_s_div (pos2, CHUNK_SIZE);
     vec3_floor (pos2);
 
-    ctr_world_query_setup (
+    vox_world_query_setup (
       (int) pos1[0], (int) pos1[1], (int) pos1[2],
       (int) pos2[0], (int) pos2[1], (int) pos2[2]
     );
 
-    ctr_world_query_load_chunks (0);
+    vox_world_query_load_chunks (0);
 
     int cx = x, cy = y, cz = z;
-    ctr_world_query_abs2rel (&cx, &cy, &cz);
+    vox_world_query_abs2rel (&cx, &cy, &cz);
 
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
@@ -532,7 +532,7 @@ AV *ctr_world_get_types_in_cube (int x, int y, int z, int size, int type_match =
       for (dy = 0; dy < size; dy++)
         for (dz = 0; dz < size; dz++)
           {
-            ctr_cell *cur = ctr_world_query_cell_at (cx + dx, cy + dy, cz + dz, 0);
+            vox_cell *cur = vox_world_query_cell_at (cx + dx, cy + dy, cz + dz, 0);
             if (!cur)
               continue;
 
@@ -550,12 +550,12 @@ AV *ctr_world_get_types_in_cube (int x, int y, int z, int size, int type_match =
               av_push (RETVAL, newSViv (cur->type));
           }
 
-    ctr_world_query_desetup (1);
+    vox_world_query_desetup (1);
 
   OUTPUT:
     RETVAL
 
-AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
+AV *vox_world_get_pattern (int x, int y, int z, int mutate)
   CODE:
     vec3_init (pos, x, y, z);
     vec3_s_div (pos, CHUNK_SIZE);
@@ -564,37 +564,37 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
         chnk_y = pos[1],
         chnk_z = pos[2];
 
-    ctr_world_query_setup (
+    vox_world_query_setup (
       chnk_x - 1, chnk_y - 1, chnk_z - 1,
       chnk_x + 1, chnk_y + 1, chnk_z + 1
     );
 
-    ctr_world_query_load_chunks (0);
+    vox_world_query_load_chunks (0);
 
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
 
     // calc relative size inside chunks:
     int cx = x, cy = y, cz = z;
-    ctr_world_query_abs2rel (&cx, &cy, &cz);
+    vox_world_query_abs2rel (&cx, &cy, &cz);
 
     //d// printf ("QUERY AT %d %d %d\n", cx, cy, cz);
 
     // find lowest cx/cz coord with constr. floor
-    ctr_cell *cur = ctr_world_query_cell_at (cx, cy, cz, 0);
+    vox_cell *cur = vox_world_query_cell_at (cx, cy, cz, 0);
     while (cur && cur->type == 36)
       {
         cx--;
         printf ("CX %d\n", cx);
-        cur = ctr_world_query_cell_at (cx, cy, cz, 0);
+        cur = vox_world_query_cell_at (cx, cy, cz, 0);
       }
 
     cx++;
-    cur = ctr_world_query_cell_at (cx, cy, cz, 0);
+    cur = vox_world_query_cell_at (cx, cy, cz, 0);
     while (cur && cur->type == 36)
       {
         cz--;
-        cur = ctr_world_query_cell_at (cx, cy, cz, 0);
+        cur = vox_world_query_cell_at (cx, cy, cz, 0);
       }
     cz++;
 
@@ -610,7 +610,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
         for (dx = 0; dx < dim; dx++)
           for (dz = 0; dz < dim; dz++)
             {
-              ctr_cell *cur = ctr_world_query_cell_at (cx + dx, cy, cz + dz, 0);
+              vox_cell *cur = vox_world_query_cell_at (cx + dx, cy, cz + dz, 0);
               //d// printf ("TXT[%d] %d %d %d: %d\n", dim, cx + dx, cy, cz + dz, cur->type);
               if (!cur || cur->type != 36)
                 no_floor = 1;
@@ -621,7 +621,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
 
     if (dim <= 0)
       {
-        ctr_world_query_desetup (1);
+        vox_world_query_desetup (1);
         XSRETURN_UNDEF;
       }
 
@@ -637,7 +637,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
             int ix = dx + cx,
                 iy = dy + cy,
                 iz = dz + cz;
-            cur = ctr_world_query_cell_at (ix, iy, iz, 0);
+            cur = vox_world_query_cell_at (ix, iy, iz, 0);
             if (cur && cur->type != 0)
               {
                 if (min_x > ix) min_x = ix;
@@ -653,7 +653,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
             int ix = dx + cx,
                 iy = dy + cy,
                 iz = dz + cz;
-            cur = ctr_world_query_cell_at (ix, iy, iz, 0);
+            cur = vox_world_query_cell_at (ix, iy, iz, 0);
             if (cur && cur->type != 0)
               {
                 if (max_x < ix) max_x = ix;
@@ -691,7 +691,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
                 continue;
               }
 
-            cur = ctr_world_query_cell_at (ix, iy, iz, 0);
+            cur = vox_world_query_cell_at (ix, iy, iz, 0);
             if (cur && cur->type != 0)
               {
                 if (mutate == 1)
@@ -710,7 +710,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
             blk_nr++;
           }
 
-    ctr_world_query_desetup (1);
+    vox_world_query_desetup (1);
 
   OUTPUT:
     RETVAL
@@ -718,7 +718,7 @@ AV *ctr_world_get_pattern (int x, int y, int z, int mutate)
 
 #define DEBUG_LIGHT 0
 
-void ctr_world_flow_light_query_setup (int minx, int miny, int minz, int maxx, int maxy, int maxz)
+void vox_world_flow_light_query_setup (int minx, int miny, int minz, int maxx, int maxy, int maxz)
   CODE:
     vec3_init (min_pos, minx, miny, minz);
     vec3_s_div (min_pos, CHUNK_SIZE);
@@ -727,15 +727,15 @@ void ctr_world_flow_light_query_setup (int minx, int miny, int minz, int maxx, i
     vec3_s_div (max_pos, CHUNK_SIZE);
     vec3_floor (max_pos);
 
-    ctr_world_query_setup (
+    vox_world_query_setup (
       min_pos[0] - 2, min_pos[1] - 2, min_pos[2] - 2,
       max_pos[0] + 2, max_pos[1] + 2, max_pos[2] + 2
     );
 
-    ctr_world_query_load_chunks (0);
+    vox_world_query_load_chunks (0);
 
 
-AV *ctr_world_query_search_types (int t1, int t2, int t3)
+AV *vox_world_query_search_types (int t1, int t2, int t3)
   CODE:
     RETVAL = newAV ();
     sv_2mortal ((SV *)RETVAL);
@@ -748,11 +748,11 @@ AV *ctr_world_query_search_types (int t1, int t2, int t3)
       for (y = 0; y < yw; y++)
         for (z = 0; z < zw; z++)
            {
-             ctr_cell *cur = ctr_world_query_cell_at (x, y, z, 0);
+             vox_cell *cur = vox_world_query_cell_at (x, y, z, 0);
              if (cur && (cur->type == t1 || cur->type == t2 || cur->type == t3))
                {
                   int rx = x, ry = y, rz = z;
-                  ctr_world_query_rel2abs (&rx, &ry, &rz);
+                  vox_world_query_rel2abs (&rx, &ry, &rz);
                   av_push (RETVAL, newSViv (rx));
                   av_push (RETVAL, newSViv (ry));
                   av_push (RETVAL, newSViv (rz));
@@ -762,7 +762,7 @@ AV *ctr_world_query_search_types (int t1, int t2, int t3)
   OUTPUT:
     RETVAL
 
-void ctr_world_query_reflow_every_light ()
+void vox_world_query_reflow_every_light ()
   CODE:
     int xw = QUERY_CONTEXT.x_w * CHUNK_SIZE,
         yw = QUERY_CONTEXT.y_w * CHUNK_SIZE,
@@ -772,15 +772,15 @@ void ctr_world_query_reflow_every_light ()
       for (y = 0; y < yw; y++)
         for (z = 0; z < zw; z++)
            {
-             ctr_cell *cur = ctr_world_query_cell_at (x, y, z, 0);
+             vox_cell *cur = vox_world_query_cell_at (x, y, z, 0);
              if (cur && (cur->type == 35 || cur->type == 40 || cur->type == 41))
-               ctr_world_query_reflow_light (x, y, z);
+               vox_world_query_reflow_light (x, y, z);
            }
 
-void ctr_world_flow_light_at (int x, int y, int z)
+void vox_world_flow_light_at (int x, int y, int z)
   CODE:
-    ctr_world_query_abs2rel (&x, &y, &z);
-    ctr_world_query_reflow_light (x, y, z);
+    vox_world_query_abs2rel (&x, &y, &z);
+    vox_world_query_reflow_light (x, y, z);
 
 
 MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::VolDraw PREFIX = vol_draw_
@@ -863,20 +863,20 @@ void vol_draw_dst_to_world (int sector_x, int sector_y, int sector_z, AV *range_
         cy = sector_y * CHUNKS_P_SECTOR,
         cz = sector_z * CHUNKS_P_SECTOR;
 
-    ctr_world_query_setup (
+    vox_world_query_setup (
       cx, cy, cz,
       cx + (CHUNKS_P_SECTOR - 1),
       cy + (CHUNKS_P_SECTOR - 1),
       cz + (CHUNKS_P_SECTOR - 1)
     );
 
-    ctr_world_query_load_chunks (1);
+    vox_world_query_load_chunks (1);
     int x, y, z;
     for (x = 0; x < DRAW_CTX.size; x++)
       for (y = 0; y < DRAW_CTX.size; y++)
         for (z = 0; z < DRAW_CTX.size; z++)
           {
-            ctr_cell *cur = ctr_world_query_cell_at (x, y, z, 1);
+            vox_cell *cur = vox_world_query_cell_at (x, y, z, 1);
             assert (cur);
             double v = DRAW_DST(x, y, z);
 
@@ -895,8 +895,8 @@ void vol_draw_dst_to_world (int sector_x, int sector_y, int sector_z, AV *range_
                 if (v >= av && v < bv)
                   {
                     cur->type = SvIV (*t);
-                    if (ctr_world_is_active (cur->type))
-                      ctr_world_emit_active_cell_change (x, y, z, cur, 0);
+                    if (vox_world_is_active (cur->type))
+                      vox_world_emit_active_cell_change (x, y, z, cur, 0);
                   }
               }
           }

@@ -110,7 +110,7 @@ sub world_init {
       },
       sub {
          my ($x, $y, $z, $type, $ent) = @_;
-         ctr_log (debug => "change active cell: %d (%d,%d,%d) (%s)",
+         vox_log (debug => "change active cell: %d (%d,%d,%d) (%s)",
                   $type, $x, $y, $z, $ent);
          my $sec = world_chnkpos2secpos (world_pos2chnkpos ([$x, $y, $z]));
          my $id  = world_pos2id ($sec);
@@ -119,17 +119,17 @@ sub world_init {
 
          my $e = delete $SECTORS{$id}->{entities}->{$eid};
          if ($e) {
-            ctr_log (debug => "entity %s destroy at sector %s entid %s",
+            vox_log (debug => "entity %s destroy at sector %s entid %s",
                      $e, $id, $eid);
             Games::VoxEngine::Server::Objects::destroy ($e);
          }
 
          unless ($ent) {
             $ent = Games::VoxEngine::Server::Objects::instance ($type);
-            ctr_log (debug => "instance entity %s at sector %s type %s: %s",
+            vox_log (debug => "instance entity %s at sector %s type %s: %s",
                      $eid, $id, $type, $ent);
          } else {
-            ctr_log (debug => "put entity %s at sector %s type %s: %s",
+            vox_log (debug => "put entity %s at sector %s type %s: %s",
                      $eid, $id, $type, $ent);
          }
 
@@ -165,11 +165,11 @@ sub world_init {
       } keys %SECTORS;
 
       for (@invisible_sectors) {
-         ctr_log (debug => "freeing invisible sector %s", $_);
+         vox_log (debug => "freeing invisible sector %s", $_);
          world_free_sector ($_);
       }
       my $cntloaded = scalar (keys %SECTORS);
-      ctr_log (debug => "sectors loaded after free: %d, %s",
+      vox_log (debug => "sectors loaded after free: %d, %s",
                $cntloaded, join (", ", keys %SECTORS));
    };
 
@@ -241,7 +241,7 @@ sub world_free_sector {
       }
    }
 
-   ctr_log (debug => "chunks from @$fchunk +5x5x5 purged");
+   vox_log (debug => "chunks from @$fchunk +5x5x5 purged");
 }
 
 my $light_upd_chunks_wait;
@@ -264,12 +264,12 @@ sub _calc_some_lights {
          Games::VoxEngine::World::flow_light_query_setup (@$pos, @$pos);
          Games::VoxEngine::World::flow_light_at (@$pos);
          my $dirty = Games::VoxEngine::World::query_desetup ();
-         ctr_log (debug => "%d chunks dirty after light calculation at @$pos", $dirty);
+         vox_log (debug => "%d chunks dirty after light calculation at @$pos", $dirty);
          $calced++;
       }
    }
    if ($calced) {
-      ctr_log (profile => "calclight step %0.4f, calced %d lights, %d lights to go\n",
+      vox_log (profile => "calclight step %0.4f, calced %d lights, %d lights to go\n",
                time - $t1, $calced, scalar @LIGHTQUEUE);
    }
 }
@@ -298,7 +298,7 @@ sub _world_make_sector {
 
    my $seed = Games::VoxEngine::Region::get_sector_seed (@$sec);
 
-   ctr_log (info => "create sector @$sec, with seed %d value %f and tyoe %s and param %f", 
+   vox_log (info => "create sector @$sec, with seed %d value %f and tyoe %s and param %f", 
             $seed, $val, $stype->{type}, $param);
 
    my $cube = $CHNKS_P_SEC * $CHNK_SIZE;
@@ -377,13 +377,13 @@ sub _world_make_sector {
       entities   => { },
    };
    _world_save_sector ($sec);
-   ctr_log (profile => "created sector @$sec in $smeta->{creation_time} seconds");
+   vox_log (profile => "created sector @$sec in $smeta->{creation_time} seconds");
 
    {
       Games::VoxEngine::World::query_desetup (2);
    }
 
-   ctr_log (debug => "placed $cnt / $plcnt lights $type ($flot) in $tsum!\n");
+   vox_log (debug => "placed $cnt / $plcnt lights $type ($flot) in $tsum!\n");
 }
 
 sub _world_load_sector {
@@ -406,7 +406,7 @@ sub _world_load_sector {
       binmode $mf, ":raw";
       my $cont = eval { decompress (do { local $/; <$mf> }) };
       if ($@) {
-         ctr_log (error => "map sector data corrupted '$file': $@\n");
+         vox_log (error => "map sector data corrupted '$file': $@\n");
          return -1;
       }
 
@@ -414,7 +414,7 @@ sub _world_load_sector {
 
       my ($metadata, $mapdata, $data) = split /\n\n\n*/, $cont, 3;
       unless ($mapdata =~ /MAPDATA/) {
-         ctr_log (error =>
+         vox_log (error =>
               "map sector file '$file' corrupted! Can't find 'MAPDATA'. "
               . "Please delete or move it away!");
          return -1;
@@ -423,7 +423,7 @@ sub _world_load_sector {
       my ($md, $datalen, @lens) = split /\s+/, $mapdata;
       #d#warn "F $md, $datalen, @lens\n";
       unless (length ($data) == $datalen) {
-         ctr_log (error =>
+         vox_log (error =>
               "map sector file '$file' corrupted, sector data truncated, "
               . "expected $datalen bytes, but only got ".length ($data)."!");
          return -1;
@@ -431,7 +431,7 @@ sub _world_load_sector {
 
       my $meta = eval { JSON->new->relaxed->utf8->decode ($metadata) };
       if ($@) {
-         ctr_log (error => "map sector meta data corrupted '$file': $@");
+         vox_log (error => "map sector meta data corrupted '$file': $@");
          return -1;
       }
 
@@ -472,12 +472,12 @@ sub _world_load_sector {
       my ($ecnt) = scalar (keys %{$SECTORS{$id}->{entities}});
 
       delete $SECTORS{$id}->{dirty}; # saved with the sector
-      ctr_log (info => "loaded sector %s from '%s', got %d entities, loading took %0.3f seconds",
+      vox_log (info => "loaded sector %s from '%s', got %d entities, loading took %0.3f seconds",
                $id, $file, $ecnt, time - $t1);
       return 1;
 
    } else {
-      ctr_log (error => "couldn't open sector file '$file': $!");
+      vox_log (error => "couldn't open sector file '$file': $!");
       return -1;
    }
 }
@@ -491,7 +491,7 @@ sub _world_save_sector {
    my $meta = $SECTORS{$id};
 
    if ($meta->{broken}) {
-      ctr_log (error => "map sector '$id' marked as broken, won't save!");
+      vox_log (error => "map sector '$id' marked as broken, won't save!");
       return;
    }
 
@@ -532,22 +532,22 @@ sub _world_save_sector {
       print $mf $filedata;
       close $mf;
       unless (-s "$file~" == length ($filedata)) {
-         ctr_log (error => "couldn't save sector completely to '$file~': $!");
+         vox_log (error => "couldn't save sector completely to '$file~': $!");
          return;
       }
 
       if (rename "$file~", $file) {
          delete $SECTORS{$id}->{dirty};
-         ctr_log (info =>
+         vox_log (info =>
               "saved sector $id to '$file', saved $ecnt entities, took %.3f seconds, wrote %d bytes",
               time - $t1, length($filedata));
 
       } else {
-         ctr_log (error => "couldn't rename sector file '$file~' to '$file': $!");
+         vox_log (error => "couldn't rename sector file '$file~' to '$file': $!");
       }
 
    } else {
-      ctr_log (error => "couldn't save sector $id to '$file~': $!");
+      vox_log (error => "couldn't save sector $id to '$file~': $!");
    }
 }
 
@@ -556,7 +556,7 @@ sub region_init {
 
    my $t1 = time;
 
-   ctr_log (info => "calculating region map with seed %d", $REGION_SEED);
+   vox_log (info => "calculating region map with seed %d", $REGION_SEED);
    Games::VoxEngine::VolDraw::alloc ($REGION_SIZE);
 
    Games::VoxEngine::VolDraw::draw_commands (
@@ -565,7 +565,7 @@ sub region_init {
    );
 
    $REGION = Games::VoxEngine::Region::new_from_vol_draw_dst ();
-   ctr_log (info => "calculating region map with seed %d took %.3f",
+   vox_log (info => "calculating region map with seed %d took %.3f",
             $REGION_SEED, time - $t1);
 }
 
@@ -672,7 +672,7 @@ sub world_load_sector {
 
    my $secid = world_pos2id ($sec);
    unless ($SECTORS{$secid}) {
-      ctr_log (info => "getting unloaded sector %s", $secid);
+      vox_log (info => "getting unloaded sector %s", $secid);
 
       my $r = _world_load_sector ($sec);
       if ($r == 0) {
@@ -681,7 +681,7 @@ sub world_load_sector {
    }
    $cb->() if $cb;
 
-   ctr_log (debug => "%d sectors loaded: %s", scalar (keys %SECTORS), join (", ", keys %SECTORS));
+   vox_log (debug => "%d sectors loaded: %s", scalar (keys %SECTORS), join (", ", keys %SECTORS));
 
    local $in_mutate = 0;
 
@@ -780,14 +780,14 @@ sub world_mutate_at {
          unless ($arg{no_light}) {
             my $t1 = time;
             Games::VoxEngine::World::flow_light_at (@{vfloor ($pos)});
-            ctr_log (profile => "mult light calc at pos @$pos took: %f secs\n", time - $t1);
+            vox_log (profile => "mult light calc at pos @$pos took: %f secs\n", time - $t1);
          }
       }
    }
 
    {
      my $dirty = Games::VoxEngine::World::query_desetup ();
-     ctr_log (debug => "%d chunks dirty after mutation and possible light flow", $dirty);
+     vox_log (debug => "%d chunks dirty after mutation and possible light flow", $dirty);
    }
 
    local $in_mutate = 0;
@@ -825,7 +825,7 @@ sub world_find_random_teleport_destination_at_dist {
    }
 
    if (!@coords) {
-      ctr_log (
+      vox_log (
          error => "Couldn't find proper teleportation destination at @$new_pos (@$sec), not teleporting player!");
       return ($pos, 0, 0);
    }

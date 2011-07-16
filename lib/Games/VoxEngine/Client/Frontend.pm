@@ -566,7 +566,7 @@ sub render_scene {
       my $tok = time - $tc;
 
       if ($tok > $tleft) {
-         ctr_log (debug =>
+         vox_log (debug =>
             "compiled $cnt chunks in $tok, but only had $tleft ($ac) left, but "
             . scalar (@compl_end) . " chunks still to compile...");
       }
@@ -574,7 +574,7 @@ sub render_scene {
       (@compl_end) = ();
 
       if (@request) {
-         ctr_log (debug => "requesting %d chnks", scalar (@request));
+         vox_log (debug => "requesting %d chnks", scalar (@request));
          $self->visible_chunks_changed ([], [], \@request);
       }
    }
@@ -670,11 +670,11 @@ sub handle_sdl_events {
          $self->resize_app ($sdle->resize_w, $sdle->resize_h);
 
       } elsif ($type == 12) {
-         ctr_log (info => "received sdl exit");
+         vox_log (info => "received sdl exit");
          exit;
 
       } else {
-         ctr_log (debug => "unknown sdl event type: %d", $type);
+         vox_log (debug => "unknown sdl event type: %d", $type);
       }
    }
 
@@ -689,8 +689,8 @@ sub setup_event_poller {
    my $fps_intv = 0.8;
    $self->{fps_w} = AE::timer 0, $fps_intv, sub {
       #printf "%.5f FPS\n", $fps / $fps_intv;
-      ctr_log (profile => "%.5f secsPcoll", $collide_time / $collide_cnt) if $collide_cnt;
-      ctr_log (profile => "%.5f secsPrender", $render_time / $render_cnt) if $render_cnt;
+      vox_log (profile => "%.5f secsPcoll", $collide_time / $collide_cnt) if $collide_cnt;
+      vox_log (profile => "%.5f secsPrender", $render_time / $render_cnt) if $render_cnt;
       $self->activate_ui (hud_fps =>
          ui_hud_window_transparent (
             pos => [left => 'up'],
@@ -748,7 +748,7 @@ sub setup_event_poller {
       my $dlta = $start_time - $last_frame;
       if ($dlta > $frame_time) {
          $dlta -= $frame_time;
-         ctr_log (profile => "frame too late, delta is %f", $dlta);
+         vox_log (profile => "frame too late, delta is %f", $dlta);
       }
 
       $self->handle_sdl_events;
@@ -1284,7 +1284,7 @@ sub activate_ui {
    my ($self, $ui, $desc) = @_;
 
    if (my $obj = $self->{active_uis}->{$ui}) {
-      ctr_prof ("act_ui($ui)", sub {
+      vox_prof ("act_ui($ui)", sub {
          $obj->update ($desc);
       });
       return;
@@ -1296,7 +1296,7 @@ sub activate_ui {
       Games::VoxEngine::Client::UI->new (
          W => $WIDTH, H => $HEIGHT, res => $self->{res}, name => $ui);
 
-   ctr_prof ("act_ui($ui)", sub {
+   vox_prof ("act_ui($ui)", sub {
       $obj->update ($desc);
    });
 
@@ -1365,7 +1365,7 @@ sub input_key_down : event_cb {
       return;
    }
 
-   ctr_log (debug => "key press %s (%s)", $key, $name);
+   vox_log (debug => "key press %s (%s)", $key, $name);
 
    my $move_x;
 
@@ -1452,7 +1452,7 @@ sub visibility_radius : event_cb {
    $FAR_PLANE = ($radius * 12) * 0.7;
    glFogf (GL_FOG_START, $FAR_PLANE - 20);
    glFogf (GL_FOG_END,   $FAR_PLANE - 1);
-   ctr_log (info => "changed visibility radius to %d", $PL_VIS_RAD);
+   vox_log (info => "changed visibility radius to %d", $PL_VIS_RAD);
 }
 
 =back

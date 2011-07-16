@@ -5,7 +5,7 @@ use Games::VoxEngine;
 use Games::VoxEngine::Server;
 use Games::VoxEngine::Logging;
 
-ctr_enable_log_categories ('info', 'error', 'warn');
+vox_enable_log_categories ('info', 'error', 'warn');
 
 Games::VoxEngine::Debug::init ("server");
 
