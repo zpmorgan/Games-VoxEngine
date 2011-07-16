@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 package Games::VoxEngine::Server;
-use common::sense;
+use Moo;
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -30,7 +30,17 @@ use Games::VoxEngine::UI;
 use Games::VoxEngine::Vector;
 use Games::VoxEngine::Logging;
 
-use base qw/Object::Event/;
+push @ISA, qw/Object::Event/;
+
+has 'pipe_to_client' => (
+   is => 'ro',
+   isa => 'IO::Pipe',
+);
+
+has 'pipe_from_client' => (
+   is => 'ro',
+   isa => 'IO::Pipe',
+);
 
 =head1 NAME
 
@@ -43,7 +53,7 @@ Games::VoxEngine::Server - Server side networking and player management
 our $RES;
 our $SHELL;
 
-sub new {
+sub newb {
    my $this  = shift;
    my $class = ref ($this) || $this;
    my $self  = { @_ };
