@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,10 +14,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Client::World;
+package Games::VoxEngine::Client::World;
 use common::sense;
-use Games::Construder::Vector;
-use Games::Construder;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine;
 use POSIX qw/floor/;
 use Object::Event;
 
@@ -45,7 +45,7 @@ our @EXPORT = qw/
 
 =head1 NAME
 
-Games::Construder::Client::World - Client collision detection and world utilities
+Games::VoxEngine::Client::World - Client collision detection and world utilities
 
 =over 4
 
@@ -112,7 +112,7 @@ sub _collide_sphere_box {
    my ($sphere_pos, $sphere_rad, $box) = @_;
 
    my $abpt =
-      Games::Construder::Math::point_aabb_distance (
+      Games::VoxEngine::Math::point_aabb_distance (
          @$sphere_pos, @$box, @{vaddd ($box, 1, 1, 1)});
    my $dv   = vsub ($sphere_pos, $abpt);
 
@@ -191,7 +191,7 @@ sub world_collide {
    }
 
    for my $cur_box (@wboxes) {
-      next unless Games::Construder::World::is_solid_at (@$cur_box);
+      next unless Games::VoxEngine::World::is_solid_at (@$cur_box);
       $cur_box->[1] = 0;
       my ($col_dir, $pos_adj) =
          _collide_sphere_box ([$pos->[0], 0, $pos->[2]], $rad, $cur_box);
@@ -236,7 +236,7 @@ sub world_collide {
          for my $y (@yr) {
             for my $z (@zr) {
                my $cur_box = vaddd ($my_box, $x, $y, $z);
-               next unless Games::Construder::World::is_solid_at (@$cur_box);
+               next unless Games::VoxEngine::World::is_solid_at (@$cur_box);
 
                my ($col_dir, $pos_adj) = _collide_sphere_box ($spos, $srad, $cur_box);
                if ($col_dir) { # collided!
@@ -262,7 +262,7 @@ sub world_collide {
 sub world_find_free_spot {
    my ($pos, $wflo) = @_;
    $wflo = 0 unless defined $wflo;
-   Games::Construder::World::find_free_spot (@$pos, $wflo);
+   Games::VoxEngine::World::find_free_spot (@$pos, $wflo);
 }
 
 =back

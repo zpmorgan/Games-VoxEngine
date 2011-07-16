@@ -3,7 +3,7 @@
 use Test::More tests => 1;
 
 BEGIN {
-	use_ok( 'Games::Construder' );
+	use_ok( 'Games::VoxEngine' );
 }
 
-diag( "Testing Games::Construder $Games::Construder::VERSION, Perl $], $^X" );
+diag( "Testing Games::VoxEngine $Games::VoxEngine::VERSION, Perl $], $^X" );

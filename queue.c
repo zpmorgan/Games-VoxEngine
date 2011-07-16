@@ -1,5 +1,5 @@
 /*
- * Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+ * Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
  * Copyright (C) 2011  Robin Redeker
  *
  * This program is free software: you can redistribute it and/or modify

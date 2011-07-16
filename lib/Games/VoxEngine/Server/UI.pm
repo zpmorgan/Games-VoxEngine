@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::UI;
+package Games::VoxEngine::Server::UI;
 use common::sense;
 use Scalar::Util qw/weaken/;
 require Exporter;
@@ -27,7 +27,7 @@ our @EXPORT = qw/
 
 =head1 NAME
 
-Games::Construder::Server::UI - Server-side Userinterface for Player interaction
+Games::VoxEngine::Server::UI - Server-side Userinterface for Player interaction
 
 =over 4
 
@@ -115,10 +115,10 @@ sub DESTROY {
    $self->{pl}->display_ui ($self->{ui_name});
 }
 
-package Games::Construder::Server::UI::Score;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::Score;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    my ($self, $hl) = @_;
@@ -162,10 +162,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::BioWarning;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::BioWarning;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    my ($self, $seconds) = @_;
@@ -181,10 +181,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::ProximityWarning;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ProximityWarning;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
 }
@@ -210,10 +210,10 @@ sub layout {
    );
 }
 
-package Games::Construder::Server::UI::MsgBox;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::MsgBox;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    my ($self, $error, $msg) = @_;
@@ -233,10 +233,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Slots;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::Slots;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -295,9 +295,9 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Help;
-use Games::Construder::UI;
-use base qw/Games::Construder::Server::UI/;
+package Games::VoxEngine::Server::UI::Help;
+use Games::VoxEngine::UI;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    ui_window ("Server Handled Keybindings",
@@ -322,23 +322,23 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::ServerInfo;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ServerInfo;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    ui_window ("Server Info",
-      ui_text ("Server Map Directory: $Games::Construder::Server::Resources::MAPDIR"),
-      ui_text ("Server Player Directory: $Games::Construder::Server::Resources::PLAYERDIR"),
+      ui_text ("Server Map Directory: $Games::VoxEngine::Server::Resources::MAPDIR"),
+      ui_text ("Server Player Directory: $Games::VoxEngine::Server::Resources::PLAYERDIR"),
    )
 }
 
-package Games::Construder::Server::UI::Status;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::Status;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub init {
    my ($self) = @_;
@@ -415,7 +415,7 @@ sub handle_command {
       $self->{pl}->create_encounter;
    } elsif ($cmd eq 'kill') {
       $self->new_ui (kill_player =>
-         "Games::Construder::Server::UI::ConfirmQuery",
+         "Games::VoxEngine::Server::UI::ConfirmQuery",
          msg       => "Do you really want to commit suicide?",
          cb => sub {
             $self->delete_ui ('kill_player');
@@ -436,14 +436,14 @@ sub handle_command {
       $self->show_ui ("trophies");
    } elsif ($cmd eq 'exit_server') {
       $self->new_ui (shutdown =>
-         "Games::Construder::Server::UI::ConfirmQuery",
+         "Games::VoxEngine::Server::UI::ConfirmQuery",
          msg       => "Do you really want to shutdown the server?",
          cb => sub {
             $self->delete_ui ('shutdown');
             if ($_[0]) {
                $self->{pl}->msg (0, "Shutting down the server in 2 seconds...");
                my $t; $t = AE::timer 2, 0, sub {
-                  $Games::Construder::Server::World::SRV->shutdown;
+                  $Games::VoxEngine::Server::World::SRV->shutdown;
                   undef $t;
                };
             }
@@ -557,10 +557,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::ListQuery;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ListQuery;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    ( return => "select" )
@@ -588,10 +588,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::ConfirmQuery;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ConfirmQuery;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub init {
 }
@@ -625,10 +625,10 @@ sub layout {
    );
 }
 
-package Games::Construder::Server::UI::StringQuery;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::StringQuery;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub init {
 }
@@ -661,10 +661,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::CountQuery;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::CountQuery;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub init {
 }
@@ -708,11 +708,11 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Paged;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::Paged;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub init {
    my ($self) = @_;
@@ -760,10 +760,10 @@ sub cur_page {
    ($page, $page_cnt, $pp, [splice @$ar, $page * $pp, $pp])
 }
 
-package Games::Construder::Server::UI::Trophies;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::Trophies;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI::Paged/;
+use base qw/Games::VoxEngine::Server::UI::Paged/;
 
 sub commands {
    my ($self) = @_;
@@ -791,7 +791,7 @@ sub collect {
 
    my $tr = $self->{pl}->{data}->{trophies}->{$t};
    my $ttype =
-      $Games::Construder::Server::RES->get_trophy_type_by_score ($t);
+      $Games::VoxEngine::Server::RES->get_trophy_type_by_score ($t);
 
    my $e = {
       label =>
@@ -844,10 +844,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::MaterialView;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::MaterialView;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    my ($self) = @_;
@@ -901,13 +901,13 @@ sub handle_command {
       $self->hide;
       my ($cnt) = $self->{pl}->{inv}->get_count ($invid);
       $self->new_ui (discard_material =>
-         "Games::Construder::Server::UI::CountQuery",
+         "Games::VoxEngine::Server::UI::CountQuery",
          msg       => "Discard how many?",
          max_count => $cnt,
          cb => sub {
             if (defined $_[0]) {
                my ($cnt, $ent) = $self->{pl}->{inv}->remove ($invid, $_[0]);
-               Games::Construder::Server::Objects::destroy ($ent) if $ent;
+               Games::VoxEngine::Server::Objects::destroy ($ent) if $ent;
             }
             $self->delete_ui ('discard_material');
          });
@@ -929,13 +929,13 @@ sub layout {
    }
 
    my $o =
-      $Games::Construder::Server::RES->get_object_by_type ($type);
+      $Games::VoxEngine::Server::RES->get_object_by_type ($type);
    my @sec =
-      $Games::Construder::Server::RES->get_sector_types_where_type_is_found ($type);
+      $Games::VoxEngine::Server::RES->get_sector_types_where_type_is_found ($type);
    my @destmat =
-      $Games::Construder::Server::RES->get_types_where_type_is_source_material ($type);
+      $Games::VoxEngine::Server::RES->get_types_where_type_is_source_material ($type);
    my @srcmat =
-      $Games::Construder::Server::RES->get_type_source_materials ($type);
+      $Games::VoxEngine::Server::RES->get_type_source_materials ($type);
 
    my @subtxts;
    push @subtxts,
@@ -989,10 +989,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::QueryPatternStorage;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::QueryPatternStorage;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub build_grid {
    my ($self) = @_;
@@ -1014,7 +1014,7 @@ sub build_grid {
       for (0..3) {
          my $i = (shift @invids) || 1;
          my ($type, $i) = $inv->split_invid ($i);
-         my $o = $Games::Construder::Server::RES->get_object_by_type ($type);
+         my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
          my ($cnt) = $inv->get_count ($i);
                     # invid, inv count, object info, shortcut
          push @row, [$i, $cnt, $o, shift @shortcuts];
@@ -1100,9 +1100,9 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Inventory;
+package Games::VoxEngine::Server::UI::Inventory;
 
-use base qw/Games::Construder::Server::UI::QueryPatternStorage/;
+use base qw/Games::VoxEngine::Server::UI::QueryPatternStorage/;
 
 sub init {
    my ($self) = @_;
@@ -1120,10 +1120,10 @@ sub layout {
    $self->SUPER::layout (@arg);
 }
 
-package Games::Construder::Server::UI::Cheat;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::Cheat;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    my ($self) = @_;
@@ -1194,12 +1194,12 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Navigator;
-use Games::Construder::UI;
-use Games::Construder::Vector;
+package Games::VoxEngine::Server::UI::Navigator;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Vector;
 use Math::Trig qw/deg2rad rad2deg pi tan atan/;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
 }
@@ -1316,11 +1316,11 @@ sub layout_dir {
    )
 }
 
-package Games::Construder::Server::UI::SectorFinder;
-use Games::Construder::UI;
-use Games::Construder::Vector;
+package Games::VoxEngine::Server::UI::SectorFinder;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Vector;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    ( return => "select" )
@@ -1330,13 +1330,13 @@ sub coords_for_sector_type {
    my ($self, $stype) = @_;
 
    my @sector_types =
-      $Games::Construder::Server::RES->get_sector_types ();
+      $Games::VoxEngine::Server::RES->get_sector_types ();
    my ($s) = grep { $_->[0] eq $stype } @sector_types;
 
    my $sec_pos  = $self->{pl}->get_pos_sector;
    my $coord =
-      Games::Construder::Region::get_nearest_sector_in_range (
-         $Games::Construder::Server::World::REGION,
+      Games::VoxEngine::Region::get_nearest_sector_in_range (
+         $Games::VoxEngine::Server::World::REGION,
          @$sec_pos,
          $s->[1], $s->[2],
       );
@@ -1367,7 +1367,7 @@ sub handle_command {
       my @coords = $self->coords_for_sector_type ($st);
 
       $self->new_ui (nav_prog_sector_select =>
-         "Games::Construder::Server::UI::ListQuery",
+         "Games::VoxEngine::Server::UI::ListQuery",
          msg => "Closest Sectors with type $st",
          items =>
             [map { [ sprintf ("%d,%d,%d: %d", @$_) , $_] } @coords],
@@ -1388,7 +1388,7 @@ sub layout {
    my ($self) = @_;
 
    my @sector_types =
-      $Games::Construder::Server::RES->get_sector_types ();
+      $Games::VoxEngine::Server::RES->get_sector_types ();
 
    my @grid;
 
@@ -1418,10 +1418,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::NavigationProgrammer;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::NavigationProgrammer;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -1437,7 +1437,7 @@ sub handle_command {
 
    if ($cmd eq 'pos') {
       $self->new_ui (nav_prog_pos =>
-         "Games::Construder::Server::UI::StringQuery",
+         "Games::VoxEngine::Server::UI::StringQuery",
          msg => "Please enter the absolute position to navigate to:",
          txt => (join ", ", @{$self->{pl}->get_pos_normalized}),
          cb  => sub {
@@ -1449,7 +1449,7 @@ sub handle_command {
 
    } elsif ($cmd eq 'sec') {
       $self->new_ui (nav_prog_pos =>
-         "Games::Construder::Server::UI::StringQuery",
+         "Games::VoxEngine::Server::UI::StringQuery",
          msg => "Please enter the absolute sector position to navigate to:",
          txt => (join ",", @{$self->{pl}->get_pos_sector}),
          cb  => sub {
@@ -1461,7 +1461,7 @@ sub handle_command {
 
    } elsif ($cmd eq 'beacon') {
       $self->new_ui (nav_prog_beacon_select =>
-         "Games::Construder::Server::UI::ListQuery",
+         "Games::VoxEngine::Server::UI::ListQuery",
          msg => "Please select the synchronized beacon you want to navigate to:",
          items => [
             map {
@@ -1497,10 +1497,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Assignment;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::Assignment;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    my ($self) = @_;
@@ -1587,7 +1587,7 @@ sub layout_offers {
                ui_small_text (
                   (join ", ", map {
                      my $o =
-                        $Games::Construder::Server::RES->get_object_by_type ($_->[2]);
+                        $Games::VoxEngine::Server::RES->get_object_by_type ($_->[2]);
                      $o->{name}
                   } @{$_->{material_map}}), wrap => 60, align => "left")
             ],
@@ -1622,10 +1622,10 @@ sub layout_assignment {
    )
 }
 
-package Games::Construder::Server::UI::AssignmentTime;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::AssignmentTime;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    ( c => "rot_selection" )
@@ -1658,9 +1658,9 @@ sub layout {
    $time -= $minutes * 60;
 
    my $sel_mat =
-      $Games::Construder::Server::RES->get_object_by_type ($cal->{sel_mat});
+      $Games::VoxEngine::Server::RES->get_object_by_type ($cal->{sel_mat});
    my $left_txt = join ("\n", map {
-      my $o = $Games::Construder::Server::RES->get_object_by_type ($_);
+      my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($_);
       sprintf "%-15s: %3d", $o->{name}, $cal->{left}->{$_}
    } keys %{$cal->{left}});
 
@@ -1675,10 +1675,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::MessageBeaconList;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::MessageBeaconList;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
 }
@@ -1705,11 +1705,11 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::MessageBeacon;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::MessageBeacon;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -1723,7 +1723,7 @@ sub handle_command {
    if ($cmd eq 'edit') {
       my ($pos, $ent) = @{$self->{entity}};
       $self->new_ui (edit_message_beacon =>
-         "Games::Construder::Server::UI::StringQuery",
+         "Games::VoxEngine::Server::UI::StringQuery",
          msg => "Please enter the message for this beacon:",
          txt => $ent->{msg},
          cb  => sub {
@@ -1756,13 +1756,13 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::PatternStorage;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
-use Games::Construder::Server::Player;
-use Games::Construder::Logging;
+package Games::VoxEngine::Server::UI::PatternStorage;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
+use Games::VoxEngine::Server::Player;
+use Games::VoxEngine::Logging;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -1777,8 +1777,8 @@ sub handle_command {
 
    my ($pos, $ent) = @{$self->{pat_stor}};
    my $ps_hdl =
-      Games::Construder::Server::PatStorHandle->new (
-         data => $ent, slot_cnt => 24);#$Games::Construder::Server::Player::PL_MAX_INV);
+      Games::VoxEngine::Server::PatStorHandle->new (
+         data => $ent, slot_cnt => 24);#$Games::VoxEngine::Server::Player::PL_MAX_INV);
 
    $ps_hdl->reg_cb (changed => sub {
       # force update:
@@ -1792,7 +1792,7 @@ sub handle_command {
    if ($cmd eq 'label') {
       my ($pos, $ent) = @{$self->{pat_stor}};
       $self->new_ui (label_pattern_store =>
-         "Games::Construder::Server::UI::StringQuery",
+         "Games::VoxEngine::Server::UI::StringQuery",
          msg => "Please enter the label for this pattern storage:",
          txt => $ent->{label},
          cb  => sub {
@@ -1814,13 +1814,13 @@ sub handle_command {
 
    } elsif ($cmd eq 'from_inv') {
       $self->new_ui (pat_store_inv_selector =>
-         "Games::Construder::Server::UI::QueryPatternStorage",
+         "Games::VoxEngine::Server::UI::QueryPatternStorage",
          title => "Transfer from Inventory",
          pat_store => $self->{pl}->{inv},
          cb  => sub {
             my $invid = $_[0];
             if (defined $invid) {
-               my $o = $Games::Construder::Server::RES->get_object_by_type ($invid);
+               my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($invid);
                my ($num) = $self->{pl}->{inv}->get_count ($invid);
                my ($cnt, $ent) = $self->{pl}->{inv}->remove ($invid, $num);
                if ($cnt) {
@@ -1845,13 +1845,13 @@ sub handle_command {
 
    } elsif ($cmd eq 'from_stor') {
       $self->new_ui (pat_store_inv_selector =>
-         "Games::Construder::Server::UI::QueryPatternStorage",
+         "Games::VoxEngine::Server::UI::QueryPatternStorage",
          title => "Transfer from Pattern Storage",
          pat_store => $ps_hdl,
          cb  => sub {
             my $invid = $_[0];
             if (defined $invid) {
-               my $o = $Games::Construder::Server::RES->get_object_by_type ($invid);
+               my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($invid);
                my ($num) = $ps_hdl->get_count ($invid);
                my ($cnt, $ent) = $ps_hdl->remove ($invid, $num);
                if ($cnt) {
@@ -1890,11 +1890,11 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Notebook;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::Notebook;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -1937,11 +1937,11 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::MaterialHandbook;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::MaterialHandbook;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI::Paged/;
+use base qw/Games::VoxEngine::Server::UI::Paged/;
 
 sub init {
    my ($self) = @_;
@@ -1952,7 +1952,7 @@ sub elements {
    my ($self) = @_;
 
    my (@objs) =
-      $Games::Construder::Server::RES->get_handbook_types;
+      $Games::VoxEngine::Server::RES->get_handbook_types;
    (@objs) = sort { $a->{name} cmp $b->{name} } @objs;
 
    (scalar (@objs), \@objs)
@@ -2001,11 +2001,11 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::Teleporter;
-use Games::Construder::UI;
-use Games::Construder::Server::World;
+package Games::VoxEngine::Server::UI::Teleporter;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Server::World;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -2024,7 +2024,7 @@ sub handle_command {
 
    } elsif ($cmd eq 'redirect') {
       $self->new_ui (tele_redirect =>
-         "Games::Construder::Server::UI::ListQuery",
+         "Games::VoxEngine::Server::UI::ListQuery",
          msg => "Please select the synchronized beacon you want to redirect the teleporter to:",
          items => [
             map {
@@ -2067,10 +2067,10 @@ sub layout {
 }
 
 
-package Games::Construder::Server::UI::ColorSelector;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ColorSelector;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -2123,10 +2123,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::ShipTransmission;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::ShipTransmission;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 my @keys = qw/1 2 3 4 5 6 7 8 9 a b c d e/;
 
@@ -2150,7 +2150,7 @@ sub layout {
    my ($self) = @_;
 
    my $inode = $self->{node}
-               || $Games::Construder::Server::RES->get_ship_tree_at ("gen_i");
+               || $Games::VoxEngine::Server::RES->get_ship_tree_at ("gen_i");
    $self->{node} = $inode;
    my $i = 0;
    my ($title, $text, @responses) = (
@@ -2169,10 +2169,10 @@ sub layout {
    )
 }
 
-package Games::Construder::Server::UI::TextScript;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::TextScript;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub layout {
    my ($self, $chrs) = @_;
@@ -2233,11 +2233,11 @@ sub layout {
    $w
 }
 
-package Games::Construder::Server::UI::PCBProg;
-use Games::Construder::Server::PCB;
-use Games::Construder::UI;
+package Games::VoxEngine::Server::UI::PCBProg;
+use Games::VoxEngine::Server::PCB;
+use Games::VoxEngine::UI;
 
-use base qw/Games::Construder::Server::UI/;
+use base qw/Games::VoxEngine::Server::UI/;
 
 sub commands {
    (
@@ -2252,7 +2252,7 @@ sub commands {
 sub handle_command {
    my ($self, $cmd, $arg) = @_;
 
-   my $pcb = Games::Construder::Server::PCB->new (p => $self->{ent}->{prog}, pl => $self->{pl});
+   my $pcb = Games::VoxEngine::Server::PCB->new (p => $self->{ent}->{prog}, pl => $self->{pl});
 
    if ($cmd eq 'next') {
       $self->{page}++;

@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,13 +14,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::PatStorHandle;
+package Games::VoxEngine::Server::PatStorHandle;
 use common::sense;
 use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Server::PatStorHandle - Generic handling of Inventory and Storage
+Games::VoxEngine::Server::PatStorHandle - Generic handling of Inventory and Storage
 
 =over 4
 
@@ -68,17 +68,17 @@ sub free_slots {
 
 sub free_density {
    my ($self) = @_;
-   my ($max_dens) = $Games::Construder::Server::RES->get_inventory_max_dens;
+   my ($max_dens) = $Games::VoxEngine::Server::RES->get_inventory_max_dens;
    my $mat = $self->{data}->{inv}->{mat};
    my $ent = $self->{data}->{inv}->{ent};
    my $sum;
    for (keys %$mat) {
-      my $o = $Games::Construder::Server::RES->get_object_by_type ($_);
+      my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($_);
       $sum += $o->{density} * $mat->{$_};
    }
    for (keys %$ent) {
       my ($type) = $self->split_invid ($_);
-      my $o = $Games::Construder::Server::RES->get_object_by_type ($type);
+      my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
       $sum += $o->{density} * 1;
    }
    my $free_dens = $max_dens - $sum;
@@ -92,7 +92,7 @@ sub space_for {
    my ($type, $invid) = $self->split_invid ($type);
    my $fslots  = $self->free_slots;
    my ($fdens) = $self->free_density;
-   my $o = $Games::Construder::Server::RES->get_object_by_type ($type);
+   my $o = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
 
    my $cnt = (not ($o) || $o->{density} <= 0) ? 0 : int ($fdens / $o->{density});
    #d# warn "SPACEFOR $fdens | $cnt: $type, $fslots\n";
@@ -122,14 +122,14 @@ sub add {
    my ($type, $invid) = $self->split_invid ($type);
    my $spc = $self->space_for ($type);
 
-   my $obj = $Games::Construder::Server::RES->get_object_by_type ($type);
+   my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
    if ($obj->{permanent}) {
       if (!ref $cnt) {
          unless ($cnt == 1) {
             warn "adding more than 1 permanent entity to a patstore does not work ($type)\n";
             $cnt = 1;
          }
-         $cnt = Games::Construder::Server::Objects::instance ($type);
+         $cnt = Games::VoxEngine::Server::Objects::instance ($type);
       }
 
    } elsif (ref $cnt) { # non permanent entity => don't store!
@@ -205,9 +205,9 @@ sub get_invids {
    sort {
       my ($atype) = $self->split_invid ($a);
       my ($btype) = $self->split_invid ($b);
-      $Games::Construder::Server::RES->get_object_by_type ($atype)->{name}
+      $Games::VoxEngine::Server::RES->get_object_by_type ($atype)->{name}
       cmp
-      $Games::Construder::Server::RES->get_object_by_type ($btype)->{name}
+      $Games::VoxEngine::Server::RES->get_object_by_type ($btype)->{name}
    } (keys %{$self->{data}->{inv}->{mat}}, keys %{$self->{data}->{inv}->{ent}})
 }
 
@@ -243,7 +243,7 @@ sub max_bio_energy_material {
    my (@max_e) = sort {
       $b->[1] <=> $a->[1]
    } grep { $_->[1] } map {
-      my $obj = $Games::Construder::Server::RES->get_object_by_type ($_);
+      my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($_);
       [$_, $obj->{bio_energy}]
    } keys %{$self->{data}->{inv}->{mat}};
 

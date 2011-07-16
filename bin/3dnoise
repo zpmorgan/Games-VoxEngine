@@ -261,7 +261,7 @@ sub start_loop {
 }
 
 package main;
-use Games::Construder;
+use Games::VoxEngine;
 use Alien::SDL;
 use Inline C =>
        Config
@@ -307,7 +307,7 @@ sub load_model {
 warn "making 3d noise\n";
 my $cube = $ARGV[1] || 30;
 
-Games::Construder::VolDraw::init ();
+Games::VoxEngine::VolDraw::init ();
 renderer::setup;
 init_c_renderer ();
 renderer::set_save_cb (sub { save_model (@_); });
@@ -355,7 +355,7 @@ renderer::set_recalc_cb ($cube, $ARGV[0], 0, sub {
 
    alloc_model ($cube);
 
-   Games::Construder::VolDraw::alloc ($cube);
+   Games::VoxEngine::VolDraw::alloc ($cube);
 
    my $filter_cmds = "";
    if (open my $f, "<", $filter_file) {
@@ -363,7 +363,7 @@ renderer::set_recalc_cb ($cube, $ARGV[0], 0, sub {
    }
 
    if (open my $f, "<", $edit_file) {
-     Games::Construder::VolDraw::draw_commands (
+     Games::VoxEngine::VolDraw::draw_commands (
        do { local $/; <$f> }
        . "\n$filter_cmds",
        { size => $cube, seed => $seed, param => $param }
@@ -374,7 +374,7 @@ renderer::set_recalc_cb ($cube, $ARGV[0], 0, sub {
    }
 
    my $m = get_model_ptr ();
-   Games::Construder::VolDraw::copy ($m);
+   Games::VoxEngine::VolDraw::copy ($m);
 
    $cube
 });

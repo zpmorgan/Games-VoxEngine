@@ -1,5 +1,5 @@
 NAME
-    Games::Construder - A 3D game written in Perl, which is actually
+    Games::VoxEngine - A 3D game written in Perl, which is actually
     playable!
 
 SYNOPSIS
@@ -12,7 +12,7 @@ SYNOPSIS
        user@host ~# construder_client
 
 DESCRIPTION
-    This is the source code documentation for the game called "Construder".
+    This is the source code documentation for the game called "VoxEngine".
 
     If you search for information on how to actually play it please look at
     the official website for introduction videos:

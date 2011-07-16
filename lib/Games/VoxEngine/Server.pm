@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,27 +14,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server;
+package Games::VoxEngine::Server;
 use common::sense;
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
 use JSON;
 
-use Games::Construder::Protocol;
-use Games::Construder::Server::Resources;
-use Games::Construder::Server::Player;
-use Games::Construder::Server::World;
-use Games::Construder::Server::Objects;
-use Games::Construder::UI;
-use Games::Construder::Vector;
-use Games::Construder::Logging;
+use Games::VoxEngine::Protocol;
+use Games::VoxEngine::Server::Resources;
+use Games::VoxEngine::Server::Player;
+use Games::VoxEngine::Server::World;
+use Games::VoxEngine::Server::Objects;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine::Logging;
 
 use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Server - Server side networking and player management
+Games::VoxEngine::Server - Server side networking and player management
 
 =over 4
 
@@ -59,7 +59,7 @@ sub new {
 sub init {
    my ($self) = @_;
 
-   $RES = Games::Construder::Server::Resources->new;
+   $RES = Games::VoxEngine::Server::Resources->new;
    $RES->init_directories;
    $RES->load_content_file;
 
@@ -255,7 +255,7 @@ sub login {
    }
 
    my $pl = $self->{players}->{$cid}
-      = Games::Construder::Server::Player->new (
+      = Games::VoxEngine::Server::Player->new (
            cid => $cid, name => $name);
 
    $self->{player_guards}->{$cid} = $pl->reg_cb (send_client => sub {
@@ -280,7 +280,7 @@ sub handle_packet : event_cb {
       $self->send_client ($cid,
          { cmd => "hello",
            info => {
-              version => (sprintf "G::C::Server %s", $Games::Construder::VERSION),
+              version => (sprintf "G::C::Server %s", $Games::VoxEngine::VERSION),
               credits => $RES->credits,
            }
          });

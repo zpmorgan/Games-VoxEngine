@@ -16,7 +16,7 @@ Blockminer3D.c
 *.bs
 _Inline
 attic/
-Construder.c
+VoxEngine.c
 MYMETA.*
 code_resources/
 media_res/
@@ -26,3 +26,8 @@ tests
 testprof
 testsprof
 res/music/
+tags
+installed_libs/
+META.yml
+inc/
+

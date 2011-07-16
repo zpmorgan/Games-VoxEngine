@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Client::Frontend;
+package Games::VoxEngine::Client::Frontend;
 use common::sense;
 use Carp;
 use SDL;
@@ -31,20 +31,20 @@ use AnyEvent;
 use Math::Trig qw/deg2rad rad2deg pi tan atan/;
 use Time::HiRes qw/time/;
 use POSIX qw/floor/;
-use Games::Construder;
-use Games::Construder::Vector;
+use Games::VoxEngine;
+use Games::VoxEngine::Vector;
 
-use Games::Construder::Client::World;
-use Games::Construder::Client::Resources;
-use Games::Construder::UI;
-use Games::Construder::Client::UI;
-use Games::Construder::Logging;
+use Games::VoxEngine::Client::World;
+use Games::VoxEngine::Client::Resources;
+use Games::VoxEngine::UI;
+use Games::VoxEngine::Client::UI;
+use Games::VoxEngine::Logging;
 
 use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Client::Frontend - Client Rendering, Physics, Keyboard handling and UI management
+Games::VoxEngine::Client::Frontend - Client Rendering, Physics, Keyboard handling and UI management
 
 =over 4
 
@@ -72,8 +72,8 @@ sub new {
 
    $self->init_object_events;
    $self->init_app;
-   Games::Construder::Renderer::init ();
-   Games::Construder::Client::UI::init_ui;
+   Games::VoxEngine::Renderer::init ();
+   Games::VoxEngine::Client::UI::init_ui;
    world_init;
 
    $self->init_physics;
@@ -144,7 +144,7 @@ sub resize_app {
 sub init_app {
    my ($self) = @_;
    $self->{app} = SDLx::App->new (
-      title  => "Construder 0.01alpha",
+      title  => "VoxEngine 0.01alpha",
       width  => $WIDTH,
       height => $HEIGHT,
       d      => $DEPTH,
@@ -271,7 +271,7 @@ sub _render_highlight {
 
 sub set_ambient_light {
    my ($self, $l) = @_;
-   Games::Construder::Renderer::set_ambient_light ($l);
+   Games::VoxEngine::Renderer::set_ambient_light ($l);
    $self->all_chunks_dirty;
 }
 
@@ -288,9 +288,9 @@ sub free_compiled_chunk {
    my $id = world_pos2id ($c);
    my $l = delete $self->{compiled_chunks}->{$id};
    delete $self->{dirty_chunks}->{$id};
-   Games::Construder::Renderer::free_geom ($l) if $l;
+   Games::VoxEngine::Renderer::free_geom ($l) if $l;
    # WARNING FIXME XXX: this might not free up all chunks that were set/initialized by the server!
-   Games::Construder::World::purge_chunk (@$c);
+   Games::VoxEngine::World::purge_chunk (@$c);
 }
 
 sub unload_geoms {
@@ -298,7 +298,7 @@ sub unload_geoms {
 
    for (keys %{$self->{compiled_chunks}}) {
       my $geom = delete $self->{compiled_chunks}->{$_};
-      Games::Construder::Renderer::free_geom ($geom);
+      Games::VoxEngine::Renderer::free_geom ($geom);
    }
 }
 
@@ -311,11 +311,11 @@ sub compile_chunk {
 
    unless ($geom) {
       $geom = $self->{compiled_chunks}->{$id} =
-         Games::Construder::Renderer::new_geom ();
+         Games::VoxEngine::Renderer::new_geom ();
    }
 
    delete $self->{dirty_chunks}->{$id};
-   return Games::Construder::Renderer::chunk ($cx, $cy, $cz, $geom);
+   return Games::VoxEngine::Renderer::chunk ($cx, $cy, $cz, $geom);
 }
 
 sub step_animations {
@@ -355,7 +355,7 @@ sub set_other_poses {
 
 sub get_visible_chunks {
    my ($self) = @_;
-   Games::Construder::Util::visible_chunks_at (
+   Games::VoxEngine::Util::visible_chunks_at (
       $self->{phys_obj}->{player}->{pos}, $PL_VIS_RAD);
 }
 
@@ -432,10 +432,10 @@ sub calc_visibility {
    unshift @fcone, $cam_pos;
 
    my $vis_chunks =
-      Games::Construder::Math::calc_visible_chunks_at_in_cone (
+      Games::VoxEngine::Math::calc_visible_chunks_at_in_cone (
          @$play_pos, $PL_VIS_RAD,
          @{$fcone[0]}, @{$fcone[1]}, $fcone[2],
-         $Games::Construder::Client::World::BSPHERE);
+         $Games::VoxEngine::Client::World::BSPHERE);
 
    my @chunks;
    my $plchnk = [world_pos2chunk ($ppf)];
@@ -464,7 +464,7 @@ sub calc_visibility {
          push @newv, $c;
       }
       $new_vis->{$cid} = $c;
-      unless (Games::Construder::World::has_chunk (@$c)) {
+      unless (Games::VoxEngine::World::has_chunk (@$c)) {
          push @req, $c;
       }
    }
@@ -514,7 +514,7 @@ sub render_scene {
       }
       my $compl = $cc->{$id}
          or next;
-      Games::Construder::Renderer::draw_geom ($compl);
+      Games::VoxEngine::Renderer::draw_geom ($compl);
    }
 
    for (@{$self->{box_highlights}}) {
@@ -844,7 +844,7 @@ sub get_selected_box_pos {
                     && grep { $cur_box->[1] == $_ }
                           $foot_box->[1]..$head_box->[1];
 
-            if (Games::Construder::World::is_solid_at (@$cur_box)) {
+            if (Games::VoxEngine::World::is_solid_at (@$cur_box)) {
                my ($dist, $q) =
                   world_intersect_ray_box (
                      $player_head, $rayd, $cur_box);
@@ -925,15 +925,15 @@ sub physics_tick : event_cb {
 
    my $player = $self->{phys_obj}->{player};
    my $below_feet_chnk =
-      Games::Construder::World::has_chunk (world_pos2chunk (vsubd ($player->{pos}, 0, 1, 0)));
+      Games::VoxEngine::World::has_chunk (world_pos2chunk (vsubd ($player->{pos}, 0, 1, 0)));
    my $feet_chnk =
-      Games::Construder::World::has_chunk (world_pos2chunk ($player->{pos}));
+      Games::VoxEngine::World::has_chunk (world_pos2chunk ($player->{pos}));
    my $head_chnk =
-      Games::Construder::World::has_chunk (
+      Games::VoxEngine::World::has_chunk (
          world_pos2chunk (vaddd ($player->{pos}, 0, $PL_HEIGHT, 0)));
    return unless $self->{ghost_mode} || $below_feet_chnk && $feet_chnk && $head_chnk;
 
-   my $bx = Games::Construder::World::at (@{vaddd ($player->{pos}, 0, -1, 0)});
+   my $bx = Games::VoxEngine::World::at (@{vaddd ($player->{pos}, 0, -1, 0)});
 
    my $gforce = [0, -9.5, 0];
    #d#if ($bx->[0] == 15) {
@@ -1191,7 +1191,7 @@ sub show_credits {
    my $si = $self->{server_info};
 
    $self->activate_ui (credits => ui_window ("About / Credits",
-      ui_caption (sprintf "Client: G::C::Client %s", $Games::Construder::VERSION),
+      ui_caption (sprintf "Client: G::C::Client %s", $Games::VoxEngine::VERSION),
       ui_subdesc ("Code: Robin Redeker"),
       ui_caption (sprintf "Server: %s", $si->{version}),
       map {
@@ -1207,7 +1207,7 @@ sub esc_menu {
    my ($self) = @_;
 
    my $ui =
-      ui_window ("Construder Client",
+      ui_window ("VoxEngine Client",
          ui_subdesc (
             "(To activate the menu item, press the key in the square brackets)"),
          ui_key_explain (F1 => "Keybindings Help (Client)"),
@@ -1293,7 +1293,7 @@ sub activate_ui {
    my $obj = delete $self->{inactive_uis}->{$ui};
 
    $obj ||=
-      Games::Construder::Client::UI->new (
+      Games::VoxEngine::Client::UI->new (
          W => $WIDTH, H => $HEIGHT, res => $self->{res}, name => $ui);
 
    ctr_prof ("act_ui($ui)", sub {

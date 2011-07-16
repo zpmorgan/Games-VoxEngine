@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,18 +14,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Client::Resources;
+package Games::VoxEngine::Client::Resources;
 use common::sense;
 use File::Temp qw/tempfile/;
 use SDL::Image;
 use SDL::Video;
 use OpenGL qw(:all);
-use Games::Construder;
-use Games::Construder::Logging;
+use Games::VoxEngine;
+use Games::VoxEngine::Logging;
 
 =head1 NAME
 
-Games::Construder::Client::Resources - Manage textures and object type attributes for the Client
+Games::VoxEngine::Client::Resources - Manage textures and object type attributes for the Client
 
 =over 4
 
@@ -105,7 +105,7 @@ sub set_resources {
 sub post_proc {
    my ($self) = @_;
 
-   Games::Construder::World::set_object_type (
+   Games::VoxEngine::World::set_object_type (
       0, 1, 0, 0, 0, 0,
       0, 0, 0
    );
@@ -145,7 +145,7 @@ sub post_proc {
          my $typeid = $_->{data}->{object_type};
          $objtype2texture->[$typeid] = [$txtid, $uv, $model];
 
-         Games::Construder::World::set_object_type (
+         Games::VoxEngine::World::set_object_type (
             $typeid,
             ($typeid == 0 || (@$txt == 0 && defined $model ? 1 : 0)),
             $typeid != 0,
@@ -160,7 +160,7 @@ sub post_proc {
                my ($nr, $type) = (shift @blocks, shift @blocks);
                $constr[$nr - 1] = $type;
             }
-            Games::Construder::World::set_object_model (
+            Games::VoxEngine::World::set_object_model (
                $typeid, $dim, \@constr,
             );
          }

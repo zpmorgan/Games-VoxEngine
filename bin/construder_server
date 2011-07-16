@@ -1,18 +1,18 @@
 #!/opt/perl/bin/perl
 use common::sense;
 use AnyEvent;
-use Games::Construder;
-use Games::Construder::Server;
-use Games::Construder::Logging;
+use Games::VoxEngine;
+use Games::VoxEngine::Server;
+use Games::VoxEngine::Logging;
 
 ctr_enable_log_categories ('info', 'error', 'warn');
 
-Games::Construder::Debug::init ("server");
+Games::VoxEngine::Debug::init ("server");
 
 our $CV = AE::cv;
 
 our $server;
-$server = Games::Construder::Server->new;
+$server = Games::VoxEngine::Server->new;
 $server->init;
 $server->listen;
 

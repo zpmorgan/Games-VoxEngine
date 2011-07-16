@@ -8,11 +8,11 @@ use OpenGL::Config;
 install_share 'res';
 
 WriteMakefile(
-    NAME                => 'Games::Construder',
+    NAME                => 'Games::VoxEngine',
     AUTHOR              => 'Robin Redeker <elmex@ta-sa.org>',
     LICENSE             => 'agpl_3',
-    VERSION_FROM        => 'lib/Games/Construder.pm',
-    ABSTRACT_FROM       => 'lib/Games/Construder.pm',
+    VERSION_FROM        => 'lib/Games/VoxEngine.pm',
+    ABSTRACT_FROM       => 'lib/Games/VoxEngine.pm',
     PL_FILES            => {},
     EXE_FILES           => [qw(bin/construder_server bin/construder_client)],
     LIBS                => [Alien::SDL->config('libs')],
@@ -51,12 +51,13 @@ WriteMakefile(
       'Compress::LZF'       => 0,
       'File::ShareDir::PAR' => 0,
       'Storable'            => 0,
+      'Getopt::Long'        => 0,
     },
     META_MERGE => {
       resources => {
          repository => {
-            web => "http://git.ta-sa.org/git/Games-Construder/",
-            url => "http://git.ta-sa.org/Games-Construder.git",
+            web => "http://git.ta-sa.org/git/Games-VoxEngine/",
+            url => "http://git.ta-sa.org/Games-VoxEngine.git",
             type => "git",
          },
          bugtracker => {
@@ -67,15 +68,15 @@ WriteMakefile(
       }
     },
     depend => {
-       "Construder.c" => "vectorlib.c world.c world_data_struct.c render.c queue.c "
+       "VoxEngine.c" => "vectorlib.c world.c world_data_struct.c render.c queue.c "
                        . "world_drawing.c noise_3d.c volume_draw.c light.c"
     },
     dist                => {
        COMPRESS => 'gzip -9f',
        SUFFIX   => 'gz',
-       PREOP => 'pod2text lib/Games/Construder.pm | tee README >$(DISTVNAME)/README; chmod -R u=rwX,go=rX . ;',
+       PREOP => 'pod2text lib/Games/VoxEngine.pm | tee README >$(DISTVNAME)/README; chmod -R u=rwX,go=rX . ;',
     },
-    clean               => { FILES => 'Games-Construder' },
+    clean               => { FILES => 'Games-VoxEngine' },
 );
 
 package MY;

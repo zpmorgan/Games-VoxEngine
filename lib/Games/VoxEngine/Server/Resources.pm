@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,19 +14,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::Resources;
+package Games::VoxEngine::Server::Resources;
 use common::sense;
 use AnyEvent;
 use JSON;
 use Digest::MD5 qw/md5_base64/;
-use Games::Construder::Server::Objects;
+use Games::VoxEngine::Server::Objects;
 use File::ShareDir::PAR;
 use Storable qw/dclone/;
 use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Server::Resources - Server side Resource manangent and balancing
+Games::VoxEngine::Server::Resources - Server side Resource manangent and balancing
 
 =over 4
 
@@ -79,7 +79,7 @@ sub _get_file {
 
 sub _get_shared_file {
    my ($file) = @_;
-   _get_file (File::ShareDir::PAR::dist_file ('Games-Construder', $file))
+   _get_file (File::ShareDir::PAR::dist_file ('Games-VoxEngine', $file))
 }
 
 sub load_content_file {
@@ -238,10 +238,10 @@ sub load_object {
    });
 
    my $isact =
-      exists $Games::Construder::Server::Objects::TYPES_INSTANCIATE{$obj->{type}};
+      exists $Games::VoxEngine::Server::Objects::TYPES_INSTANCIATE{$obj->{type}};
 
    print "Set object type $obj->{type}: $isact\n";
-   Games::Construder::World::set_object_type (
+   Games::VoxEngine::World::set_object_type (
       $obj->{type},
       ($obj->{type} == 0 || (!$obj->{texture}  && defined $obj->{model} ? 1 : 0)),
       $obj->{type} != 0,
@@ -332,7 +332,7 @@ sub get_resources_by_id {
 sub loaded_objects : event_cb {
    my ($self) = @_;
 
-   Games::Construder::World::set_object_type (
+   Games::VoxEngine::World::set_object_type (
       0, 1, 0, 0, 0, 0,
       0, 0, 0
    );

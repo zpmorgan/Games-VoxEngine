@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,16 +14,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::World;
+package Games::VoxEngine::Server::World;
 use common::sense;
-use Games::Construder::Vector;
-use Games::Construder;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine;
 use Time::HiRes qw/time/;
 use Carp qw/confess/;
 use Compress::LZF qw/decompress compress/;
 use JSON;
 use Storable qw/dclone/;
-use Games::Construder::Logging;
+use Games::VoxEngine::Logging;
 
 require Exporter;
 our @ISA = qw/Exporter/;
@@ -52,7 +52,7 @@ our @EXPORT = qw/
 
 =head1 NAME
 
-Games::Construder::Server::World - Server side world management and utility functions
+Games::VoxEngine::Server::World - Server side world management and utility functions
 
 =over 4
 
@@ -87,7 +87,7 @@ sub world_init {
 
    $SRV = $server;
 
-   Games::Construder::World::init (
+   Games::VoxEngine::World::init (
       sub {
          my ($x, $y, $z) = @_;
          my $chnk = [$x, $y, $z];
@@ -121,11 +121,11 @@ sub world_init {
          if ($e) {
             ctr_log (debug => "entity %s destroy at sector %s entid %s",
                      $e, $id, $eid);
-            Games::Construder::Server::Objects::destroy ($e);
+            Games::VoxEngine::Server::Objects::destroy ($e);
          }
 
          unless ($ent) {
-            $ent = Games::Construder::Server::Objects::instance ($type);
+            $ent = Games::VoxEngine::Server::Objects::instance ($type);
             ctr_log (debug => "instance entity %s at sector %s type %s: %s",
                      $eid, $id, $type, $ent);
          } else {
@@ -137,7 +137,7 @@ sub world_init {
       }
    );
 
-   Games::Construder::VolDraw::init ();
+   Games::VoxEngine::VolDraw::init ();
 
    $STORE_SCHED_TMR = AE::timer 0, 1, sub {
       NEXT:
@@ -179,7 +179,7 @@ sub world_init {
             my $e = $s->{entities}->{$eid};
             next unless $e->{time_active};
             my $pos = world_id2pos ($eid);
-            Games::Construder::Server::Objects::tick ($pos, $e, $e->{type}, 0.15);
+            Games::VoxEngine::Server::Objects::tick ($pos, $e, $e->{type}, 0.15);
          }
       }
 
@@ -232,7 +232,7 @@ sub world_free_sector {
    for my $x (0..4) {
       for my $y (0..4) {
          for my $z (0..4) {
-            Games::Construder::World::purge_chunk (
+            Games::VoxEngine::World::purge_chunk (
                $fchunk->[0] + $x,
                $fchunk->[1] + $y,
                $fchunk->[2] + $z
@@ -261,9 +261,9 @@ sub _calc_some_lights {
             next;
          }
 
-         Games::Construder::World::flow_light_query_setup (@$pos, @$pos);
-         Games::Construder::World::flow_light_at (@$pos);
-         my $dirty = Games::Construder::World::query_desetup ();
+         Games::VoxEngine::World::flow_light_query_setup (@$pos, @$pos);
+         Games::VoxEngine::World::flow_light_at (@$pos);
+         my $dirty = Games::VoxEngine::World::query_desetup ();
          ctr_log (debug => "%d chunks dirty after light calculation at @$pos", $dirty);
          $calced++;
       }
@@ -275,7 +275,7 @@ sub _calc_some_lights {
 }
 
 sub _query_push_lightqueue {
-   my $lightposes = Games::Construder::World::query_search_types (35, 41, 40);
+   my $lightposes = Games::VoxEngine::World::query_search_types (35, 41, 40);
    while (@$lightposes) {
       my $pos = [shift @$lightposes, shift @$lightposes, shift @$lightposes];
       my $id = world_pos2id ($pos);
@@ -291,29 +291,29 @@ sub _world_make_sector {
 
    my $tcreate = time;
 
-   my $val = Games::Construder::Region::get_sector_value ($REGION, @$sec);
+   my $val = Games::VoxEngine::Region::get_sector_value ($REGION, @$sec);
 
    my ($stype, $param) =
-      $Games::Construder::Server::RES->get_sector_desc_for_region_value ($val);
+      $Games::VoxEngine::Server::RES->get_sector_desc_for_region_value ($val);
 
-   my $seed = Games::Construder::Region::get_sector_seed (@$sec);
+   my $seed = Games::VoxEngine::Region::get_sector_seed (@$sec);
 
    ctr_log (info => "create sector @$sec, with seed %d value %f and tyoe %s and param %f", 
             $seed, $val, $stype->{type}, $param);
 
    my $cube = $CHNKS_P_SEC * $CHNK_SIZE;
-   Games::Construder::VolDraw::alloc ($cube);
+   Games::VoxEngine::VolDraw::alloc ($cube);
 
-   Games::Construder::VolDraw::draw_commands (
+   Games::VoxEngine::VolDraw::draw_commands (
      $stype->{cmds},
      { size => $cube, seed => $seed, param => $param }
    );
 
-   Games::Construder::VolDraw::dst_to_world (@$sec, $stype->{ranges} || []);
+   Games::VoxEngine::VolDraw::dst_to_world (@$sec, $stype->{ranges} || []);
 
-   my $pospos = Games::Construder::World::query_possible_light_positions ();
+   my $pospos = Games::VoxEngine::World::query_possible_light_positions ();
 
-   Games::Construder::World::query_desetup (1);
+   Games::VoxEngine::World::query_desetup (1);
 
    my $lower_left  = vsmul ($sec, $CHNK_SIZE * $CHNKS_P_SEC);
    my $upper_right =
@@ -322,7 +322,7 @@ sub _world_make_sector {
              $CHNKS_P_SEC * $CHNK_SIZE,
              $CHNKS_P_SEC * $CHNK_SIZE);
 
-   Games::Construder::World::flow_light_query_setup (@$lower_left, @$upper_right);
+   Games::VoxEngine::World::flow_light_query_setup (@$lower_left, @$upper_right);
 
    my $t1 = time;
 
@@ -340,15 +340,15 @@ sub _world_make_sector {
       41 => 100,
       35 => 60,
    );
-   my $rnd_type = Games::Construder::Random::rnd_xor ($seed);
-   my $flot = Games::Construder::Random::rnd_float ($rnd_type) * 6.99999;
+   my $rnd_type = Games::VoxEngine::Random::rnd_xor ($seed);
+   my $flot = Games::VoxEngine::Random::rnd_float ($rnd_type) * 6.99999;
    my $type = $types[int $flot];
 
    my $nxt = $rnd_type;
    my $type_cnt = $type_cnt{$type};
    for (my $i = 0; $i < $type_cnt; $i++) {
-      $nxt        = Games::Construder::Random::rnd_xor ($nxt);
-      my $nxt_flt = Games::Construder::Random::rnd_float ($nxt) - 0.00000001;
+      $nxt        = Games::VoxEngine::Random::rnd_xor ($nxt);
+      my $nxt_flt = Games::VoxEngine::Random::rnd_float ($nxt) - 0.00000001;
       $nxt_flt    = 0 if $nxt_flt < 0;
       my $idx     = int ($nxt_flt * @poses);
 #d# print "INDEX $nxt_flt | $idx from " . scalar (@poses) . "\n";
@@ -356,7 +356,7 @@ sub _world_make_sector {
       my $p = splice @poses, $idx, 1, ();
       last unless $p;
 
-      Games::Construder::World::query_set_at_abs (
+      Games::VoxEngine::World::query_set_at_abs (
          @$p, [$type, 0, 0, 0, 0]);
       $plcnt++;
    }
@@ -380,7 +380,7 @@ sub _world_make_sector {
    ctr_log (profile => "created sector @$sec in $smeta->{creation_time} seconds");
 
    {
-      Games::Construder::World::query_desetup (2);
+      Games::VoxEngine::World::query_desetup (2);
    }
 
    ctr_log (debug => "placed $cnt / $plcnt lights $type ($flot) in $tsum!\n");
@@ -392,7 +392,7 @@ sub _world_load_sector {
    my $t1 = time;
 
    my $id   = world_pos2id ($sec);
-   my $mpd  = $Games::Construder::Server::Resources::MAPDIR;
+   my $mpd  = $Games::VoxEngine::Server::Resources::MAPDIR;
    my $file = "$mpd/$id.sec";
 
    return 1 if ($SECTORS{$id}
@@ -449,7 +449,7 @@ sub _world_load_sector {
 
                   my $len = shift @lens;
                   my $chunk = substr $data, $offs, $len;
-                  Games::Construder::World::set_chunk_data (
+                  Games::VoxEngine::World::set_chunk_data (
                      @$chnk, $chunk, length ($chunk));
                   $offs += $len;
                }
@@ -463,9 +463,9 @@ sub _world_load_sector {
                    $CHNKS_P_SEC * $CHNK_SIZE,
                    $CHNKS_P_SEC * $CHNK_SIZE);
 
-         Games::Construder::World::flow_light_query_setup (@$lower_left, @$upper_right);
+         Games::VoxEngine::World::flow_light_query_setup (@$lower_left, @$upper_right);
          _query_push_lightqueue ();
-         Games::Construder::World::query_desetup (2);
+         Games::VoxEngine::World::query_desetup (2);
       }
 
 
@@ -504,7 +504,7 @@ sub _world_save_sector {
          for my $dz (0..($CHNKS_P_SEC - 1)) {
             my $chnk = vaddd ($first_chnk, $dx, $dy, $dz);
             push @chunks,
-               Games::Construder::World::get_chunk_data (@$chnk);
+               Games::VoxEngine::World::get_chunk_data (@$chnk);
          }
       }
    }
@@ -524,7 +524,7 @@ sub _world_save_sector {
       . "\n\n" . $data
    );
 
-   my $mpd = $Games::Construder::Server::Resources::MAPDIR;
+   my $mpd = $Games::VoxEngine::Server::Resources::MAPDIR;
    my $file = "$mpd/$id.sec";
 
    if (open my $mf, ">", "$file~") {
@@ -557,14 +557,14 @@ sub region_init {
    my $t1 = time;
 
    ctr_log (info => "calculating region map with seed %d", $REGION_SEED);
-   Games::Construder::VolDraw::alloc ($REGION_SIZE);
+   Games::VoxEngine::VolDraw::alloc ($REGION_SIZE);
 
-   Games::Construder::VolDraw::draw_commands (
+   Games::VoxEngine::VolDraw::draw_commands (
      $cmds,
      { size => $REGION_SIZE, seed => $REGION_SEED, param => 1 }
    );
 
-   $REGION = Games::Construder::Region::new_from_vol_draw_dst ();
+   $REGION = Games::VoxEngine::Region::new_from_vol_draw_dst ();
    ctr_log (info => "calculating region map with seed %d took %.3f",
             $REGION_SEED, time - $t1);
 }
@@ -759,34 +759,34 @@ sub world_mutate_at {
          }
       }
      #d# warn "MUTL @$min | @$max\n";
-      Games::Construder::World::flow_light_query_setup (@$min, @$max);
+      Games::VoxEngine::World::flow_light_query_setup (@$min, @$max);
 
    } else {
       world_load_at ($poses); # blocks for now :-/
 
-      Games::Construder::World::flow_light_query_setup (@$poses, @$poses);
+      Games::VoxEngine::World::flow_light_query_setup (@$poses, @$poses);
       $poses = [$poses];
    }
 
    for my $pos (@$poses) {
-      my $b = Games::Construder::World::at (@$pos);
+      my $b = Games::VoxEngine::World::at (@$pos);
       my $ent;
       $ent = world_entity_at ($pos) if $arg{need_entity};
       push @$b, $ent;
       #d# print "MULT MUTATING (@$b) (AT @$pos)\n";
       if ($cb->($b, $pos)) {
          #d# print "MULT MUTATING TO => (@$b) (AT @$pos)\n";
-         Games::Construder::World::query_set_at_abs (@$pos, $b);
+         Games::VoxEngine::World::query_set_at_abs (@$pos, $b);
          unless ($arg{no_light}) {
             my $t1 = time;
-            Games::Construder::World::flow_light_at (@{vfloor ($pos)});
+            Games::VoxEngine::World::flow_light_at (@{vfloor ($pos)});
             ctr_log (profile => "mult light calc at pos @$pos took: %f secs\n", time - $t1);
          }
       }
    }
 
    {
-     my $dirty = Games::Construder::World::query_desetup ();
+     my $dirty = Games::VoxEngine::World::query_desetup ();
      ctr_log (debug => "%d chunks dirty after mutation and possible light flow", $dirty);
    }
 
@@ -801,7 +801,7 @@ sub world_mutate_at {
 sub world_find_free_spot {
    my ($pos, $wflo) = @_;
    $wflo = 0 unless defined $wflo;
-   Games::Construder::World::find_free_spot (@$pos, $wflo);
+   Games::VoxEngine::World::find_free_spot (@$pos, $wflo);
 }
 
 sub world_find_random_teleport_destination_at_dist {
@@ -812,10 +812,10 @@ sub world_find_random_teleport_destination_at_dist {
    my $sec = world_chnkpos2secpos (world_pos2chnkpos ($new_pos));
 
    my $coord =
-      Games::Construder::Region::get_nearest_sector_in_range (
-         $Games::Construder::Server::World::REGION,
+      Games::VoxEngine::Region::get_nearest_sector_in_range (
+         $Games::VoxEngine::Server::World::REGION,
          @$sec,
-         $Games::Construder::Server::RES->get_teleport_destination_region_range
+         $Games::VoxEngine::Server::RES->get_teleport_destination_region_range
       );
 
    my @coords;

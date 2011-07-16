@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,17 +14,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::Objects;
+package Games::VoxEngine::Server::Objects;
 use common::sense;
-use Games::Construder::Server::PCB;
-use Games::Construder::Server::World;
-use Games::Construder::Vector;
-use Games::Construder;
+use Games::VoxEngine::Server::PCB;
+use Games::VoxEngine::Server::World;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine;
 use Scalar::Util qw/weaken/;
 
 =head1 NAME
 
-Games::Construder::Server::Objects - Implementation of Object Type specific behaviour
+Games::VoxEngine::Server::Objects - Implementation of Object Type specific behaviour
 
 =over 4
 
@@ -177,7 +177,7 @@ sub ia_vaporizer {
 
    my $time = $entity->{time};
    my (@pl) =
-      $Games::Construder::Server::World::SRV->players_near_pos ($POS);
+      $Games::VoxEngine::Server::World::SRV->players_near_pos ($POS);
    for my $x (-$rad..$rad) {
       $_->[0]->highlight (vaddd ($POS, $x, 0, 0), $time, [1, 1, 0]) for @pl;
    }
@@ -197,15 +197,15 @@ sub ia_vaporizer {
 sub ia_construction_pad {
    my ($PL, $POS) = @_;
 
-   my $a = Games::Construder::World::get_pattern (@$POS, 0);
+   my $a = Games::VoxEngine::World::get_pattern (@$POS, 0);
    if ($a) {
-      my $obj = $Games::Construder::Server::RES->get_object_by_pattern ($a);
+      my $obj = $Games::VoxEngine::Server::RES->get_object_by_pattern ($a);
       if ($obj) {
          my ($score, $time) =
-            $Games::Construder::Server::RES->get_type_construct_values ($obj->{type});
+            $Games::VoxEngine::Server::RES->get_type_construct_values ($obj->{type});
 
          if ($PL->{inv}->has_space_for ($obj->{type})) {
-            my $a = Games::Construder::World::get_pattern (@$POS, 1);
+            my $a = Games::VoxEngine::World::get_pattern (@$POS, 1);
 
             my @poses;
             while (@$a) {
@@ -221,7 +221,7 @@ sub ia_construction_pad {
                my $ent = $data->[5]; # kill entity
                $data->[5] = undef;
                if ($ent) {
-                  Games::Construder::Server::Objects::destroy ($ent);
+                  Games::VoxEngine::Server::Objects::destroy ($ent);
                }
                1
             }, no_light => 1);
@@ -338,7 +338,7 @@ sub drone_visible_players {
       $a->[1] <=> $b->[1]
    } grep {
       not $_->[0]->{data}->{signal_jammed}
-   } $Games::Construder::Server::World::SRV->players_near_pos ($pos);
+   } $Games::VoxEngine::Server::World::SRV->players_near_pos ($pos);
 }
 
 sub drone_check_player_hit {
@@ -420,7 +420,7 @@ sub tmr_drone {
    drone_check_player_hit ($pos, $entity, $pl);
 
    my $empty =
-      Games::Construder::World::get_types_in_cube (
+      Games::VoxEngine::World::get_types_in_cube (
          @{vsubd ($new_pos, 1, 1, 1)}, 3, 0);
 
    my @empty;
@@ -503,13 +503,13 @@ sub tmr_auto {
 
    warn "PCB @ @$pos doing something\n";
 
-   my ($pl) = $Games::Construder::Server::World::SRV->get_player ($entity->{player})
+   my ($pl) = $Games::VoxEngine::Server::World::SRV->get_player ($entity->{player})
       or return;
 
    my ($pcb_obj) =
-      $Games::Construder::Server::RES->get_object_by_type ($type);
+      $Games::VoxEngine::Server::RES->get_object_by_type ($type);
 
-   my $pcb = Games::Construder::Server::PCB->new (p => $entity->{prog}, pl => $pl, act => sub {
+   my $pcb = Games::VoxEngine::Server::PCB->new (p => $entity->{prog}, pl => $pl, act => sub {
       my ($op, @args) = @_;
       my $cb = pop @args;
 
@@ -520,7 +520,7 @@ sub tmr_auto {
          world_mutate_at ($new_pos, sub {
             my ($data) = @_;
             if ($data->[0] != 0) {
-               my $obj = $Games::Construder::Server::RES->get_object_by_type ($data->[0]);
+               my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($data->[0]);
                $cb->($obj->{name});
                return 0;
             }
@@ -554,7 +554,7 @@ sub tmr_auto {
             $entity->{used_energy} += 1;
 
             my ($obj) =
-               $Games::Construder::Server::RES->get_object_by_type ($data->[0]);
+               $Games::VoxEngine::Server::RES->get_object_by_type ($data->[0]);
 
             $data->[0] = 0;
             $data->[3] &= 0xF0; # clear color :)
@@ -568,7 +568,7 @@ sub tmr_auto {
          my $new_pos = vadd ($pos, $dir);
 
          my ($obj) =
-            $Games::Construder::Server::RES->get_object_by_name ($args[1]);
+            $Games::VoxEngine::Server::RES->get_object_by_name ($args[1]);
          unless ($obj) {
             $pl->msg (1, "PCB Error: No such material: '$args[1]'");
             $cb->("no_such_material");
@@ -592,7 +592,7 @@ sub tmr_auto {
                $pl->highlight ($new_pos, $dt, [0, 1, 0]);
 
                my ($time, $energy, $score) =
-                  $Games::Construder::Server::RES->get_type_materialize_values (
+                  $Games::VoxEngine::Server::RES->get_type_materialize_values (
                      $obj->{type});
 
                $entity->{used_energy} += $energy;
@@ -604,7 +604,7 @@ sub tmr_auto {
                return 1;
 
             } else {
-               my $obj = $Games::Construder::Server::RES->get_object_by_type ($data->[0]);
+               my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($data->[0]);
                $cb->("blocked" => $obj->{name});
                return 0;
             }
@@ -624,10 +624,10 @@ sub tmr_auto {
             }
 
             my ($obj) =
-               $Games::Construder::Server::RES->get_object_by_type ($data->[0]);
+               $Games::VoxEngine::Server::RES->get_object_by_type ($data->[0]);
 
             my ($time, $energy, $score) =
-               $Games::Construder::Server::RES->get_type_dematerialize_values (
+               $Games::VoxEngine::Server::RES->get_type_dematerialize_values (
                   $obj->{type});
 
             if ($pl->{inv}->add ($data->[0], $data->[5] || 1)) {
@@ -658,7 +658,7 @@ sub tmr_auto {
             }
 
             my ($obj) =
-               $Games::Construder::Server::RES->get_object_by_type ($data->[0]);
+               $Games::VoxEngine::Server::RES->get_object_by_type ($data->[0]);
             $cb->($obj->{name});
             return 0;
          });

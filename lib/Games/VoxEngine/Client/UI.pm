@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Client::UI;
+package Games::VoxEngine::Client::UI;
 use common::sense;
 use SDL;
 use SDL::Surface;
@@ -22,22 +22,22 @@ use SDL::Video;
 use SDL::TTF;
 use OpenGL qw(:all);
 use JSON;
-use Games::Construder::Vector;
-use Games::Construder;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine;
 use File::ShareDir::PAR;
-use Games::Construder::Logging;
+use Games::VoxEngine::Logging;
 
 use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Client::UI - Client GUI implementation
+Games::VoxEngine::Client::UI - Client GUI implementation
 
 =over 4
 
 =cut
 
-our $RES; # set by Games::Construder::Client
+our $RES; # set by Games::VoxEngine::Client
 
 my $BIG_FONT; # should be around 35 pixel
 my $NORM_FONT; # should be around 20 pixel
@@ -55,7 +55,7 @@ sub init_ui {
    }
 
    my $fnt =
-      File::ShareDir::PAR::dist_file ('Games-Construder', 'font/FreeMonoBold.ttf');
+      File::ShareDir::PAR::dist_file ('Games-VoxEngine', 'font/FreeMonoBold.ttf');
 
    $BIG_FONT   = SDL::TTF::open_font ($fnt, 35)
       or die "Couldn't load font from $fnt: " . SDL::get_error . "\n";
@@ -633,20 +633,20 @@ sub render_object_type_sample {
 
    if ($skip >= 0) {
       $skip++;
-      my $geom = Games::Construder::Renderer::new_geom ();
-      Games::Construder::Renderer::model ($type, 0, 1, 0, 0, 0, $geom, $skip, 1);
-      Games::Construder::Renderer::draw_geom ($geom);
-      Games::Construder::Renderer::free_geom ($geom);
+      my $geom = Games::VoxEngine::Renderer::new_geom ();
+      Games::VoxEngine::Renderer::model ($type, 0, 1, 0, 0, 0, $geom, $skip, 1);
+      Games::VoxEngine::Renderer::draw_geom ($geom);
+      Games::VoxEngine::Renderer::free_geom ($geom);
       return;
    }
 
    if (my $g = $MODEL_CACHE{$type}) {
-      Games::Construder::Renderer::draw_geom ($g);
+      Games::VoxEngine::Renderer::draw_geom ($g);
 
    } else {
-      my $geom = $MODEL_CACHE{$type} = Games::Construder::Renderer::new_geom ();
-      Games::Construder::Renderer::model ($type, 0, 1, 0, 0, 0, $geom, -1, 0);
-      Games::Construder::Renderer::draw_geom ($geom);
+      my $geom = $MODEL_CACHE{$type} = Games::VoxEngine::Renderer::new_geom ();
+      Games::VoxEngine::Renderer::model ($type, 0, 1, 0, 0, 0, $geom, -1, 0);
+      Games::VoxEngine::Renderer::draw_geom ($geom);
    }
 }
 

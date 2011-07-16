@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Logging;
+package Games::VoxEngine::Logging;
 use common::sense;
 require Exporter;
 use POSIX qw/floor/;
@@ -29,7 +29,7 @@ our @EXPORT = qw/
 
 =head1 NAME
 
-Games::Construder::Logging - This module takes care of logging construder client and server output.
+Games::VoxEngine::Logging - This module takes care of logging construder client and server output.
 
 =over 4
 

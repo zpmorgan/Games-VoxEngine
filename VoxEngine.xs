@@ -78,7 +78,7 @@ unsigned int ctr_cone_sphere_intersect (double cam_x, double cam_y, double cam_z
     return 0;
 }
 
-MODULE = Games::Construder PACKAGE = Games::Construder::Math PREFIX = ctr_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Math PREFIX = ctr_
 
 unsigned int ctr_cone_sphere_intersect (double cam_x, double cam_y, double cam_z, double cam_v_x, double cam_v_y, double cam_v_z, double cam_fov, double sphere_x, double sphere_y, double sphere_z, double sphere_rad);
 
@@ -196,7 +196,7 @@ ctr_calc_visible_chunks_at (double pt_x, double pt_y, double pt_z, double rad)
   OUTPUT:
     RETVAL
 
-MODULE = Games::Construder PACKAGE = Games::Construder::Renderer PREFIX = ctr_render_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Renderer PREFIX = ctr_render_
 
 void *ctr_render_new_geom ();
 
@@ -226,7 +226,7 @@ void ctr_render_set_ambient_light (double l)
   CODE:
      ctr_ambient_light = l;
 
-MODULE = Games::Construder PACKAGE = Games::Construder::World PREFIX = ctr_world_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::World PREFIX = ctr_world_
 
 void ctr_world_init (SV *change_cb, SV *cell_change_cb)
   CODE:
@@ -783,7 +783,7 @@ void ctr_world_flow_light_at (int x, int y, int z)
     ctr_world_query_reflow_light (x, y, z);
 
 
-MODULE = Games::Construder PACKAGE = Games::Construder::VolDraw PREFIX = vol_draw_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::VolDraw PREFIX = vol_draw_
 
 void vol_draw_init ();
 
@@ -901,7 +901,7 @@ void vol_draw_dst_to_world (int sector_x, int sector_y, int sector_z, AV *range_
               }
           }
 
-MODULE = Games::Construder PACKAGE = Games::Construder::Random PREFIX = random_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Random PREFIX = random_
 
 unsigned int rnd_xor (unsigned int x);
 
@@ -912,7 +912,7 @@ double rnd_float (unsigned int x)
   OUTPUT:
     RETVAL
 
-MODULE = Games::Construder PACKAGE = Games::Construder::Region PREFIX = region_
+MODULE = Games::VoxEngine PACKAGE = Games::VoxEngine::Region PREFIX = region_
 
 void *region_new_from_vol_draw_dst ()
   CODE:

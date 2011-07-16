@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder;
+package Games::VoxEngine;
 use JSON;
 use common::sense;
 use Time::HiRes qw/time/;
-use Games::Construder::Logging;
+use Games::VoxEngine::Logging;
 
 require Exporter;
 our @ISA = qw/Exporter/;
@@ -29,11 +29,11 @@ our @EXPORT = qw/
 our $VERSION = '0.94';
 
 use XSLoader;
-XSLoader::load "Games::Construder", $Games::Construder::VERSION;
+XSLoader::load "Games::VoxEngine", $Games::VoxEngine::VERSION;
 
 =head1 NAME
 
-Games::Construder - A 3D game written in Perl, which is actually playable!
+Games::VoxEngine - A 3D game written in Perl, which is actually playable!
 
 =head1 SYNOPSIS
 
@@ -47,7 +47,7 @@ Games::Construder - A 3D game written in Perl, which is actually playable!
 
 =head1 DESCRIPTION
 
-This is the source code documentation for the game called "Construder".
+This is the source code documentation for the game called "VoxEngine".
 
 If you search for information on how to actually play it please look at
 the official website for introduction videos:
@@ -77,13 +77,13 @@ sub ctr_prof {
    }, sub { $sub->() });
 }
 
-package Games::Construder::Util;
+package Games::VoxEngine::Util;
 
 sub visible_chunks_at {
    my ($pos, $rad) = @_;
 
    my $chnks =
-      Games::Construder::Math::calc_visible_chunks_at (@$pos, $rad);
+      Games::VoxEngine::Math::calc_visible_chunks_at (@$pos, $rad);
    my @o;
    for (my $i = 0; $i < @$chnks; $i += 3) {
       push @o, [$chnks->[$i], $chnks->[$i + 1], $chnks->[$i + 2]];
@@ -92,8 +92,8 @@ sub visible_chunks_at {
    return @o
 }
 
-package Games::Construder::VolDraw;
-use Games::Construder::Logging;
+package Games::VoxEngine::VolDraw;
+use Games::VoxEngine::Logging;
 
 sub _get_file {
    my ($file) = @_;
@@ -281,8 +281,8 @@ sub draw_commands {
    }
 }
 
-package Games::Construder::Debug;
-use Games::Construder::Logging;
+package Games::VoxEngine::Debug;
+use Games::VoxEngine::Logging;
 use AnyEvent::Debug;
 
 our $SHELL;

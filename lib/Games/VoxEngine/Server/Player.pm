@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,16 +14,16 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Server::Player;
+package Games::VoxEngine::Server::Player;
 #d#use Devel::FindRef;
 use common::sense;
 use AnyEvent;
-use Games::Construder::Server::World;
-use Games::Construder::Server::UI;
-use Games::Construder::Server::Objects;
-use Games::Construder::Server::PatStorHandle;
-use Games::Construder::Logging;
-use Games::Construder::Vector;
+use Games::VoxEngine::Server::World;
+use Games::VoxEngine::Server::UI;
+use Games::VoxEngine::Server::Objects;
+use Games::VoxEngine::Server::PatStorHandle;
+use Games::VoxEngine::Logging;
+use Games::VoxEngine::Vector;
 use Time::HiRes qw/time/;
 use base qw/Object::Event/;
 use Scalar::Util qw/weaken/;
@@ -31,7 +31,7 @@ use Compress::LZF;
 
 =head1 NAME
 
-Games::Construder::Server::Player - Implementation of Player central Game Mechanics (the heart of the game)
+Games::VoxEngine::Server::Player - Implementation of Player central Game Mechanics (the heart of the game)
 
 =over 4
 
@@ -54,7 +54,7 @@ sub new {
 
 sub _check_file {
    my ($self) = @_;
-   my $pld = $Games::Construder::Server::Resources::PLAYERDIR;
+   my $pld = $Games::VoxEngine::Server::Resources::PLAYERDIR;
    my $file = "$pld/$self->{name}.json";
    return unless -e "$file";
 
@@ -77,7 +77,7 @@ sub _check_file {
 
 sub _initialize_player {
    my ($self) = @_;
-   my $inv = $Games::Construder::Server::RES->get_initial_inventory;
+   my $inv = $Games::VoxEngine::Server::RES->get_initial_inventory;
    my $data = {
       name      => $self->{name},
       happyness => 100,
@@ -85,7 +85,7 @@ sub _initialize_player {
       score     => 0,
  #     pos       => [1.1 * 60, -29 * 60, 1.1 * 60],
       pos       => [
-         map { 60 * $_ } $Games::Construder::Server::RES->get_initial_position
+         map { 60 * $_ } $Games::VoxEngine::Server::RES->get_initial_position
       ],
       time      => 0,
       inv       => $inv,
@@ -113,7 +113,7 @@ sub load {
 sub save {
    my ($self) = @_;
    my $cont = JSON->new->pretty->utf8->encode ($self->{data});
-   my $pld = $Games::Construder::Server::Resources::PLAYERDIR;
+   my $pld = $Games::VoxEngine::Server::Resources::PLAYERDIR;
    my $file = "$pld/$self->{name}.json";
 
    if (open my $plf, ">", "$file~") {
@@ -186,37 +186,37 @@ sub init {
          }
    };
 
-   $self->new_ui (bio_warning   => "Games::Construder::Server::UI::BioWarning");
-   $self->new_ui (msgbox        => "Games::Construder::Server::UI::MsgBox");
-   $self->new_ui (score         => "Games::Construder::Server::UI::Score");
-   $self->new_ui (slots         => "Games::Construder::Server::UI::Slots");
-   $self->new_ui (status        => "Games::Construder::Server::UI::Status");
-   $self->new_ui (server_info   => "Games::Construder::Server::UI::ServerInfo");
-   $self->new_ui (material_view => "Games::Construder::Server::UI::MaterialView");
-   $self->new_ui (inventory     => "Games::Construder::Server::UI::Inventory");
-   $self->new_ui (cheat         => "Games::Construder::Server::UI::Cheat");
-   $self->new_ui (sector_finder => "Games::Construder::Server::UI::SectorFinder");
-   $self->new_ui (navigator     => "Games::Construder::Server::UI::Navigator");
+   $self->new_ui (bio_warning   => "Games::VoxEngine::Server::UI::BioWarning");
+   $self->new_ui (msgbox        => "Games::VoxEngine::Server::UI::MsgBox");
+   $self->new_ui (score         => "Games::VoxEngine::Server::UI::Score");
+   $self->new_ui (slots         => "Games::VoxEngine::Server::UI::Slots");
+   $self->new_ui (status        => "Games::VoxEngine::Server::UI::Status");
+   $self->new_ui (server_info   => "Games::VoxEngine::Server::UI::ServerInfo");
+   $self->new_ui (material_view => "Games::VoxEngine::Server::UI::MaterialView");
+   $self->new_ui (inventory     => "Games::VoxEngine::Server::UI::Inventory");
+   $self->new_ui (cheat         => "Games::VoxEngine::Server::UI::Cheat");
+   $self->new_ui (sector_finder => "Games::VoxEngine::Server::UI::SectorFinder");
+   $self->new_ui (navigator     => "Games::VoxEngine::Server::UI::Navigator");
    $self->new_ui (navigation_programmer
-                                => "Games::Construder::Server::UI::NavigationProgrammer");
-   $self->new_ui (assignment      => "Games::Construder::Server::UI::Assignment");
-   $self->new_ui (assignment_time => "Games::Construder::Server::UI::AssignmentTime");
-   $self->new_ui (pattern_storage => "Games::Construder::Server::UI::PatternStorage");
-   $self->new_ui (material_handbook => "Games::Construder::Server::UI::MaterialHandbook");
-   $self->new_ui (notebook      => "Games::Construder::Server::UI::Notebook");
-   $self->new_ui (msg_beacon    => "Games::Construder::Server::UI::MessageBeacon");
-   $self->new_ui (msg_beacon_list => "Games::Construder::Server::UI::MessageBeaconList");
-   $self->new_ui (teleporter    => "Games::Construder::Server::UI::Teleporter");
-   $self->new_ui (color_select  => "Games::Construder::Server::UI::ColorSelector");
-   $self->new_ui (ship_transmission => "Games::Construder::Server::UI::ShipTransmission");
-   $self->new_ui (prox_warn     => "Games::Construder::Server::UI::ProximityWarning");
-   $self->new_ui (text_script   => "Games::Construder::Server::UI::TextScript");
-   $self->new_ui (trophies      => "Games::Construder::Server::UI::Trophies");
-   $self->new_ui (help          => "Games::Construder::Server::UI::Help");
-   $self->new_ui (pcb_prog      => "Games::Construder::Server::UI::PCBProg");
+                                => "Games::VoxEngine::Server::UI::NavigationProgrammer");
+   $self->new_ui (assignment      => "Games::VoxEngine::Server::UI::Assignment");
+   $self->new_ui (assignment_time => "Games::VoxEngine::Server::UI::AssignmentTime");
+   $self->new_ui (pattern_storage => "Games::VoxEngine::Server::UI::PatternStorage");
+   $self->new_ui (material_handbook => "Games::VoxEngine::Server::UI::MaterialHandbook");
+   $self->new_ui (notebook      => "Games::VoxEngine::Server::UI::Notebook");
+   $self->new_ui (msg_beacon    => "Games::VoxEngine::Server::UI::MessageBeacon");
+   $self->new_ui (msg_beacon_list => "Games::VoxEngine::Server::UI::MessageBeaconList");
+   $self->new_ui (teleporter    => "Games::VoxEngine::Server::UI::Teleporter");
+   $self->new_ui (color_select  => "Games::VoxEngine::Server::UI::ColorSelector");
+   $self->new_ui (ship_transmission => "Games::VoxEngine::Server::UI::ShipTransmission");
+   $self->new_ui (prox_warn     => "Games::VoxEngine::Server::UI::ProximityWarning");
+   $self->new_ui (text_script   => "Games::VoxEngine::Server::UI::TextScript");
+   $self->new_ui (trophies      => "Games::VoxEngine::Server::UI::Trophies");
+   $self->new_ui (help          => "Games::VoxEngine::Server::UI::Help");
+   $self->new_ui (pcb_prog      => "Games::VoxEngine::Server::UI::PCBProg");
 
    $self->{inv} =
-      Games::Construder::Server::PatStorHandle->new (data => $self->{data}, slot_cnt => $PL_MAX_INV);
+      Games::VoxEngine::Server::PatStorHandle->new (data => $self->{data}, slot_cnt => $PL_MAX_INV);
 
    $self->{inv}->reg_cb (changed => sub {
       if ($wself->{uis}->{inventory}->{shown}) {
@@ -242,7 +242,7 @@ sub push_tick_change {
 sub player_tick {
    my ($self, $dt) = @_;
 
-   my $player_values = $Games::Construder::Server::RES->player_values ();
+   my $player_values = $Games::VoxEngine::Server::RES->player_values ();
 
    while (@{$self->{tick_changes}}) {
       my ($k, $a) = @{shift @{$self->{tick_changes}}};
@@ -259,7 +259,7 @@ sub player_tick {
          }
 
       } elsif ($k eq 'score') {
-         my $happy = $Games::Construder::Server::RES->score2happyness ($a);
+         my $happy = $Games::VoxEngine::Server::RES->score2happyness ($a);
          $self->{data}->{happyness} += int ($happy + 0.5);
 
          if ($self->{data}->{happyness} < 90) {
@@ -385,7 +385,7 @@ sub kill_player {
    $self->teleport ($new_pos);
    $self->msg (1, "You died of $reason, your stats and inventory were reset and you have been teleported $secdist sectors away!");
    $self->{inv}->remove ('all');
-   my $inv = $Games::Construder::Server::RES->get_initial_inventory;
+   my $inv = $Games::VoxEngine::Server::RES->get_initial_inventory;
    $self->{data}->{inv}->{$_} = $inv->{$_} for keys %$inv;
    $self->{data}->{happyness} = 100;
    $self->{data}->{bio}       = 100;
@@ -556,7 +556,7 @@ sub send_chunk {
    # be sent by the chunk_changed-callback by the server (when it checks
    # whether any player might be interested in that chunk).
    my $id = world_pos2id ($chnk);
-   my $data = Games::Construder::World::get_chunk_data (@$chnk);
+   my $data = Games::VoxEngine::World::get_chunk_data (@$chnk);
    unless (defined $data) {
       #d# warn "send_chunk: @$chnk was not yet allocated!\n";
       delete $self->{to_send_chunks}->{$id};
@@ -596,7 +596,7 @@ sub interact {
 
    world_at ($pos, sub {
       my ($pos, $cell) = @_;
-      Games::Construder::Server::Objects::interact ($self, $pos, $cell->[0], $cell->[5]);
+      Games::VoxEngine::Server::Objects::interact ($self, $pos, $cell->[0], $cell->[5]);
    });
 }
 
@@ -691,9 +691,9 @@ sub start_materialize {
 
       return 0 unless $data->[0] == 0;
 
-      my $obj = $Games::Construder::Server::RES->get_object_by_type ($type);
+      my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
       my ($time, $energy, $score) =
-         $Games::Construder::Server::RES->get_type_materialize_values (
+         $Games::VoxEngine::Server::RES->get_type_materialize_values (
             $type, $self->has_matter_transformer_upgrade);
       unless ($self->{data}->{bio} >= $energy) {
          $self->msg (1, "You don't have enough energy to materialize the $obj->{name}!");
@@ -731,7 +731,7 @@ sub do_dematerialize {
             $data->[5] = undef;
             $data->[3] &= 0xF0; # clear color :)
             if ($ent) {
-               Games::Construder::Server::Objects::destroy ($ent);
+               Games::VoxEngine::Server::Objects::destroy ($ent);
             }
          } else {
             $data->[0] = $type;
@@ -760,7 +760,7 @@ sub start_dematerialize {
    world_mutate_at ($pos, sub {
       my ($data) = @_;
       my $type = $data->[0];
-      my $obj = $Games::Construder::Server::RES->get_object_by_type ($type);
+      my $obj = $Games::VoxEngine::Server::RES->get_object_by_type ($type);
       if ($type == 1) { # materialization, due to glitches
          world_mutate_at ($pos, sub {
             my ($data) = @_;
@@ -783,7 +783,7 @@ sub start_dematerialize {
       }
 
       my ($time, $energy) =
-         $Games::Construder::Server::RES->get_type_dematerialize_values (
+         $Games::VoxEngine::Server::RES->get_type_dematerialize_values (
             $type, $self->has_matter_transformer_upgrade);
 
       unless ($obj->{bio_energy} || $self->{data}->{bio} >= $energy) {
@@ -813,7 +813,7 @@ sub check_message_beacons {
    my ($self) = @_;
 
    my $msgboxes =
-      Games::Construder::World::get_types_in_cube (
+      Games::VoxEngine::World::get_types_in_cube (
          @{vsubd ($self->get_pos_normalized, 15, 15, 15)}, 30, 34);
 
    my $cur_beacons = {};
@@ -870,7 +870,7 @@ sub check_assignment_offers {
 
       unless ($offer) {
          my ($desc, $size, $material_map, $distance, $time, $score) =
-            $Games::Construder::Server::RES->get_assignment_for_score (
+            $Games::VoxEngine::Server::RES->get_assignment_for_score (
                $self->{data}->{score}, $d * 2);
          $offer = {
             diff         => $d,
@@ -900,7 +900,7 @@ sub take_assignment {
    $self->{data}->{offers}->[$nr] = undef;
 
    #my ($desc, $size, $material_map, $distance, $time, $score) =
-   #   $Games::Construder::Server::RES->get_assignment_for_score ($self->{data}->{score});
+   #   $Games::VoxEngine::Server::RES->get_assignment_for_score ($self->{data}->{score});
 
    #print "ASSIGNMENT BASE VALUES: " . JSON->new->pretty->encode ([
    #   $desc, $size, $material_map, $distance, $time, $score
@@ -912,14 +912,14 @@ sub take_assignment {
    ctr_log (debug => "took assignment at @$vec => @$wpos");
 
    my $size = $offer->{size};
-   Games::Construder::VolDraw::alloc ($size);
+   Games::VoxEngine::VolDraw::alloc ($size);
 
-   Games::Construder::VolDraw::draw_commands (
+   Games::VoxEngine::VolDraw::draw_commands (
      $offer->{cmds},
      { size => $size, seed => $offer->{score}, param => 1 }
    );
 
-   my $cube = Games::Construder::VolDraw::to_perl ();
+   my $cube = Games::VoxEngine::VolDraw::to_perl ();
    shift @$cube;
 
    my $material_map = $offer->{material_map};
@@ -963,7 +963,7 @@ sub check_assignment_positions {
    my $assign = $self->{data}->{assignment};
    my $lpos   = { %{$assign->{pos_types}} };
    my $typ    =
-      Games::Construder::World::get_types_in_cube (@{$assign->{pos}}, $assign->{size});
+      Games::VoxEngine::World::get_types_in_cube (@{$assign->{pos}}, $assign->{size});
 
    #d#printf "CHECK TIME 1 %f\n", time - $t;
 
@@ -1107,7 +1107,7 @@ sub create_encounter {
    my $new_pos = world_find_free_spot ($pos, 0);
 
    my ($teledist, $nxttime, $lifetime) =
-      $Games::Construder::Server::RES->encounter_values ();
+      $Games::VoxEngine::Server::RES->encounter_values ();
 
    ctr_log (debug => "next encounter for player %s is %d (%d, %d)", $self->{name}, $nxttime, $teledist, $lifetime);
    $self->{data}->{next_encounter} = $nxttime;
@@ -1116,7 +1116,7 @@ sub create_encounter {
       my ($data) = @_;
       $data->[0] = 50;
       $data->[5] =
-         Games::Construder::Server::Objects::instance (
+         Games::VoxEngine::Server::Objects::instance (
             50, int ($dist * 1.5 + $lifetime), $teledist);
       return 1;
    });
@@ -1125,7 +1125,7 @@ sub create_encounter {
 sub check_signal_jamming {
    my ($self) = @_;
    my $jammers =
-      Games::Construder::World::get_types_in_cube (
+      Games::VoxEngine::World::get_types_in_cube (
          @{vsubd ($self->get_pos_normalized, 15, 15, 15)}, 30, 33);
 
    my $pre = $self->{data}->{signal_jammed};
@@ -1138,7 +1138,7 @@ sub add_trophies {
    my $time      = $self->{data}->{time};
 
    my @t =
-      $Games::Construder::Server::RES->generate_trophies_for_score_change (
+      $Games::VoxEngine::Server::RES->generate_trophies_for_score_change (
          $old_score, $new_score, $time);
 
    my $new;

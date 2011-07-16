@@ -1,4 +1,4 @@
-# Games::Construder - A 3D Game written in Perl with an infinite and modifiable world.
+# Games::VoxEngine - A 3D Game written in Perl with an infinite and modifiable world.
 # Copyright (C) 2011  Robin Redeker
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,15 +14,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-package Games::Construder::Client;
+package Games::VoxEngine::Client;
 use common::sense;
 use Compress::LZF;
-use Games::Construder::Client::Frontend;
-use Games::Construder::Client::World;
-use Games::Construder::Protocol;
-use Games::Construder::Vector;
-use Games::Construder::Logging;
-use Games::Construder;
+use Games::VoxEngine::Client::Frontend;
+use Games::VoxEngine::Client::World;
+use Games::VoxEngine::Protocol;
+use Games::VoxEngine::Vector;
+use Games::VoxEngine::Logging;
+use Games::VoxEngine;
 use AnyEvent;
 use AnyEvent::Socket;
 use AnyEvent::Handle;
@@ -33,7 +33,7 @@ use base qw/Object::Event/;
 
 =head1 NAME
 
-Games::Construder::Client - Client Networking Implementation
+Games::VoxEngine::Client - Client Networking Implementation
 
 =over 4
 
@@ -47,16 +47,16 @@ sub new {
 
    $self->init_object_events;
 
-   Games::Construder::World::init (sub {
+   Games::VoxEngine::World::init (sub {
    }, sub { });
 
-   $self->{res} = Games::Construder::Client::Resources->new;
+   $self->{res} = Games::VoxEngine::Client::Resources->new;
    $self->{res}->init_directories;
    $self->{res}->load_config;
-   $Games::Construder::Client::UI::RES = $self->{res};
+   $Games::VoxEngine::Client::UI::RES = $self->{res};
 
    $self->{front} =
-      Games::Construder::Client::Frontend->new (res => $self->{res}, client => $self);
+      Games::VoxEngine::Client::Frontend->new (res => $self->{res}, client => $self);
 
    $self->{in_ex} = 0;
    $self->{front}->set_exception_cb (sub {
@@ -176,7 +176,7 @@ sub connected : event_cb {
    my ($self) = @_;
    $self->{front}->msg ("Connected to Server!");
    ctr_log (info => "connected to server %s on port %d", $self->{host}, $self->{port});
-   $self->send_server ({ cmd => 'hello', version => "Games::Construder::Client 0.1" });
+   $self->send_server ({ cmd => 'hello', version => "Games::VoxEngine::Client 0.1" });
 }
 
 sub handle_packet : event_cb {
@@ -268,7 +268,7 @@ sub handle_packet : event_cb {
       # WARNING FIXME XXX: this data might not be freed up all chunks that
       # were set/initialized by the server! see also free_compiled_chunk in Frontend.pm
       my $neigh_chunks =
-         Games::Construder::World::set_chunk_data (@{$hdr->{pos}}, $body, length $body);
+         Games::VoxEngine::World::set_chunk_data (@{$hdr->{pos}}, $body, length $body);
       if ($neigh_chunks & 0x01) {
          $self->{front}->dirty_chunk (vaddd ($hdr->{pos}, -1, 0, 0));
       }
