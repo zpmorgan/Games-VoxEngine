@@ -55,16 +55,16 @@ WriteMakefile(
     },
     META_MERGE => {
       resources => {
-         repository => {
-            web => "http://git.ta-sa.org/git/Games-VoxEngine/",
-            url => "http://git.ta-sa.org/Games-VoxEngine.git",
-            type => "git",
-         },
-         bugtracker => {
-            web => "http://ue.o---o.eu/",
-            mailto => "elmex\@ta-sa.org",
-         },
-         homepage => "http://ue.o---o.eu/",
+#         repository => {
+#            web => "http://git.ta-sa.org/git/Games-VoxEngine/",
+#            url => "http://git.ta-sa.org/Games-VoxEngine.git",
+#            type => "git",
+#         },
+#         bugtracker => {
+#            web => "http://ue.o---o.eu/",
+#            mailto => "elmex\@ta-sa.org",
+#         },
+#         homepage => "http://ue.o---o.eu/",
       }
     },
     depend => {

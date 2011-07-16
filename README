@@ -1,9 +1,9 @@
 NAME
-    Games::VoxEngine - A 3D game written in Perl, which is actually
-    playable!
+    Games::VoxEngine - A 3D voxel engine, which is fairly flexible, but
+    not terribly capable.
 
 SYNOPSIS
-       Starting the server:
+       Starting the server (subject to change):
 
        user@host ~# construder_server
 
@@ -14,30 +14,17 @@ SYNOPSIS
 DESCRIPTION
     This is the source code documentation for the game called "VoxEngine".
 
-    If you search for information on how to actually play it please look at
-    the official website for introduction videos:
-
-    <http://ue.o---o.eu/>
-
-    You can also find other interesting information there, such as
-    screenshots, the motivation of writing this game or where to go with
-    questions and/or bug reports.
+    <http://github.com/zpmorgan/Games-VoxEngine>
 
 PACKAGES
     This specific module file provides the XS bindings and also some utility
     functions that are used in many places in the game.
 
-AUTHOR
-    Robin Redeker, "<elmex@ta-sa.org>"
-
 SEE ALSO
-    <http://www.deliantra.net/> - Another game written with a lot of Perl,
-    facilitating "Coro", "IO::AIO", "AnyEvent", "JSON" and many other Perl
-    modules.
+    Construder <http://ue.o---o.eu/> - VoxEngine's parent project. A
+    truly deciduous voxel game. 
 
 COPYRIGHT & LICENSE
-    Copyright 2011 Robin Redeker, all rights reserved.
-
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU Affero General Public License.
 
