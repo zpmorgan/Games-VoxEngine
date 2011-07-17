@@ -15,11 +15,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 package Games::VoxEngine::Server;
+
+use base qw/Object::Event/;
 use Moo;
+
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
 use JSON;
+use Carp qw/confess/;
 
 use Games::VoxEngine::Protocol;
 use Games::VoxEngine::Server::Resources;
@@ -30,7 +34,7 @@ use Games::VoxEngine::UI;
 use Games::VoxEngine::Vector;
 use Games::VoxEngine::Logging;
 
-push @ISA, qw/Object::Event/;
+#push @ISA, qw/Object::Event/;
 
 has 'pipe_to_client' => (
    is => 'ro',
@@ -41,6 +45,13 @@ has 'pipe_from_client' => (
    is => 'ro',
    isa => 'IO::Pipe',
 );
+
+sub port{9364};
+#has 'port' => (
+#   isa => 'Num',
+#   is => 'ro',
+#   default => 9364,
+#);
 
 =head1 NAME
 
@@ -93,7 +104,7 @@ sub init {
 sub listen {
    my ($self) = @_;
 
-   tcp_server undef, $self->{port}, sub {
+   tcp_server undef, $self->port, sub {
       my ($fh, $h, $p) = @_;
 
       $self->{clids}++;
@@ -112,7 +123,7 @@ sub listen {
       $self->handle_protocol ($cid);
    };
 
-   vox_log (info => "Listening for clients on port %d", $self->{port});
+   vox_log (info => "Listening for clients on port %d", $self->port);
 }
 
 sub shutdown {
@@ -136,6 +147,8 @@ sub handle_protocol {
 
 sub send_client {
    my ($self, $cid, $hdr, $body) = @_;
+   #print (%$hdr, "\n") and confess unless $body;
+   $body //= '';
 
    $self->{clients}->{$cid}->push_write (packstring => "N", packet2data ($hdr, $body));
 
