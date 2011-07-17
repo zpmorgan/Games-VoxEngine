@@ -52,6 +52,7 @@ WriteMakefile(
       'File::ShareDir::PAR' => 0,
       'Storable'            => 0,
       'Getopt::Long'        => 0,
+      'Mouse'               => 0,
     },
     META_MERGE => {
       resources => {

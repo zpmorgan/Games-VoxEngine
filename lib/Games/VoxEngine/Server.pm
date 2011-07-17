@@ -16,8 +16,8 @@
 #
 package Games::VoxEngine::Server;
 
-use base qw/Object::Event/;
-use Moo;
+#use base qw/Object::Event/;
+use Mouse;
 
 use AnyEvent;
 use AnyEvent::Handle;
@@ -35,7 +35,13 @@ use Games::VoxEngine::Vector;
 use Games::VoxEngine::Logging;
 
 #push @ISA, qw/Object::Event/;
-
+has _event_handler => (
+   is => 'ro',
+   isa => 'Object::Event',
+   builder => '_build_event_handler',
+   lazy => 1,
+   handles => [qw/ reg_cb unreg_cb set_exception_cb handles stop_event /],
+);
 has 'pipe_to_client' => (
    is => 'ro',
    isa => 'IO::Pipe',
@@ -46,12 +52,12 @@ has 'pipe_from_client' => (
    isa => 'IO::Pipe',
 );
 
-sub port{9364};
-#has 'port' => (
-#   isa => 'Num',
-#   is => 'ro',
-#   default => 9364,
-#);
+#sub port{9364};
+has 'port' => (
+   isa => 'Int',
+   is => 'ro',
+   default => 9364,
+);
 
 =head1 NAME
 
@@ -64,20 +70,7 @@ Games::VoxEngine::Server - Server side networking and player management
 our $RES;
 our $SHELL;
 
-sub newb {
-   my $this  = shift;
-   my $class = ref ($this) || $this;
-   my $self  = { @_ };
-   bless $self, $class;
-
-   $self->init_object_events;
-
-   $self->{port} ||= 9364;
-
-   return $self
-}
-
-sub init {
+sub BUILD {
    my ($self) = @_;
 
    $RES = Games::VoxEngine::Server::Resources->new;
@@ -191,7 +184,7 @@ sub push_transfer {
    }
 }
 
-sub client_disconnected : event_cb {
+sub client_disconnected {
    my ($self, $cid) = @_;
    my $pl = delete $self->{players}->{$cid};
    $pl->logout if $pl;
@@ -227,12 +220,12 @@ sub players_near_pos {
    @p
 }
 
-sub client_connected : event_cb {
+sub client_connected {
    my ($self, $cid) = @_;
    vox_log (info => "Client connected: %s", $cid);
 }
 
-sub handle_player_packet : event_cb {
+sub handle_player_packet {
    my ($self, $player, $hdr, $body) = @_;
 
    if ($hdr->{cmd} eq 'ui_response') {
@@ -292,7 +285,7 @@ sub login {
       { cmd => "login", name => $name });
 }
 
-sub handle_packet : event_cb {
+sub handle_packet {
    my ($self, $cid, $hdr, $body) = @_;
 
    if ($hdr->{cmd} ne 'p') {

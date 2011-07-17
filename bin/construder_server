@@ -13,8 +13,6 @@ our $CV = AE::cv;
 
 our $server;
 $server = Games::VoxEngine::Server->new;
-$server->newb;
-$server->init;
 $server->listen;
 
 $CV->recv;
