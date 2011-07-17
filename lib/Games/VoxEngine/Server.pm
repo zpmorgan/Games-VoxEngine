@@ -42,11 +42,16 @@ has _event_handler => (
    lazy => 1,
    handles => [qw/ reg_cb unreg_cb set_exception_cb handles stop_event /],
 );
+sub _build_event_handler{
+   my $self = shift;
+   my $EH = Object::Event->new();
+   $EH->init_object_events;
+   return $EH;
+}
 has 'pipe_to_client' => (
    is => 'ro',
    isa => 'IO::Pipe',
 );
-
 has 'pipe_from_client' => (
    is => 'ro',
    isa => 'IO::Pipe',

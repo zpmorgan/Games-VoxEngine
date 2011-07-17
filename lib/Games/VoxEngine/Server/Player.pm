@@ -405,8 +405,6 @@ sub logout {
    #d# print Devel::FindRef::track $self;
 }
 
-my $world_c = 0;
-
 sub update_pos {
    my ($self, $pos, $lv) = @_;
 

@@ -9,7 +9,11 @@ vox_enable_log_categories ('info', 'error', 'warn', 'chat');
 
 Games::VoxEngine::Debug::init ("client");
 
-our $game = eval { Games::VoxEngine::Client->new (auto_login => 'foo') };
+our $game = eval { Games::VoxEngine::Client->new (
+      auto_login => $ARGV[0] || 'foo',
+      port => $ARGV[2] || 9364,
+      host => $ARGV[1] || 'localhost',
+) };
 if ($@) {
    vox_log (error => "Couldn't initialized client: %s", $@);
    exit 1;

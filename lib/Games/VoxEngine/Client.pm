@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 package Games::VoxEngine::Client;
+use Mouse;
 use common::sense;
 use Compress::LZF;
 use Games::VoxEngine::Client::Frontend;
@@ -29,7 +30,7 @@ use AnyEvent::Handle;
 use Benchmark qw/:all/;
 use Time::HiRes qw/time/;
 
-use base qw/Object::Event/;
+#use base qw/Object::Event/;
 
 =head1 NAME
 
@@ -39,13 +40,46 @@ Games::VoxEngine::Client - Client Networking Implementation
 
 =cut
 
+has _event_handler => (
+   is => 'ro',
+   isa => 'Object::Event',
+   builder => '_build_event_handler',
+   lazy => 1,
+   handles => [qw/ reg_cb unreg_cb set_exception_cb handles stop_event /],
+);
+sub _build_event_handler{
+   my $self = shift;
+   my $EH = Object::Event->new();
+   $EH->init_object_events;
+   return $EH;
+}
+has 'pipe_to_server' => (
+   is => 'ro',
+   isa => 'IO::Pipe',
+);
+has 'pipe_from_server' => (
+   is => 'ro',
+   isa => 'IO::Pipe',
+);
+
+has 'port' => (
+   isa => 'Int',
+   is => 'ro',
+   default => 9364,
+);
+
+has 'host' => (
+   isa => 'Int',
+   is => 'ro',
+   default => 'localhost',
+);
+
+
 sub new {
    my $this  = shift;
    my $class = ref ($this) || $this;
    my $self  = { @_ };
    bless $self, $class;
-
-   $self->init_object_events;
 
    Games::VoxEngine::World::init (sub {
    }, sub { });
@@ -106,7 +140,7 @@ sub new {
       }
    );
 
-   $self->connect ($ARGV[1] || localhost => $ARGV[2] || 9364);
+   $self->connect ($self->host , $self->port);
 
    return $self
 }
@@ -121,13 +155,11 @@ sub start {
 
 sub reconnect {
    my ($self) = @_;
-   $self->connect ($self->{host}, $self->{port});
+   $self->connect ($self->host, $self->port);
 }
 
 sub connect {
    my ($self, $host, $port) = @_;
-
-   ($self->{host}, $self->{port}) = ($host, $port);
 
    delete $self->{recon};
    tcp_connect $host, $port, sub {
@@ -172,14 +204,14 @@ sub send_server {
    }
 }
 
-sub connected : event_cb {
+sub connected {
    my ($self) = @_;
    $self->{front}->msg ("Connected to Server!");
-   vox_log (info => "connected to server %s on port %d", $self->{host}, $self->{port});
+   vox_log (info => "connected to server %s on port %d", $self->host, $self->port);
    $self->send_server ({ cmd => 'hello', version => "Games::VoxEngine::Client 0.1" });
 }
 
-sub handle_packet : event_cb {
+sub handle_packet {
    my ($self, $hdr, $body) = @_;
 
    vox_log (network => "recv[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
@@ -294,7 +326,7 @@ sub handle_packet : event_cb {
    }
 }
 
-sub disconnected : event_cb {
+sub disconnected {
    my ($self) = @_;
    delete $self->{srv};
    $self->{front}->msg ("Disconnected from server!");
