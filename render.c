@@ -98,27 +98,38 @@ typedef struct _vox_dyn_buf {
     unsigned int item;
 } vox_dyn_buf;
 
+void vox_dyn_buf_set_size (vox_dyn_buf *db, unsigned int items)
+{
+  void *nb = safemalloc (items * db->item);
+  if (db->alloc > items)
+    memset (nb, 0, items * db->item);
+  else
+    memcpy (nb, *(db->ptr), db->alloc * db->item);
+
+  if (*(db->ptr))
+    safefree (*(db->ptr));
+  *(db->ptr) = nb;
+
+  db->alloc = items;
+}
+
 void vox_dyn_buf_init (vox_dyn_buf *db, GLfloat **ptr, unsigned int pa_items,
                        unsigned int item_size)
 {
   db->ptr = ptr;
-  *(db->ptr) = safemalloc (pa_items * item_size);
+  *(db->ptr) = 0;
   db->item = item_size;
-  db->alloc = pa_items;
+  db->alloc = 0;
+
+  vox_dyn_buf_set_size (db, pa_items);
 }
 
 void vox_dyn_buf_grow (vox_dyn_buf *db, unsigned int items)
 {
   if (db->alloc >= items)
     return;
-
   items *= 2;
-
-  void *nb = safemalloc (items * db->item);
-  memcpy (nb, *(db->ptr), db->alloc * db->item);
-  safefree (*(db->ptr));
-  *(db->ptr) = nb;
-  db->alloc = items;
+  vox_dyn_buf_set_size (db, items);
 }
 
 void vox_dyn_buf_free (vox_dyn_buf *db)
