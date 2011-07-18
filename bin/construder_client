@@ -19,11 +19,8 @@ if ($@) {
    exit 1;
 }
 
-our $in_ex;
 $game->set_exception_cb (sub {
    my ($ex, $ev) = @_;
-   return if $in_ex;
-   local $in_ex = 1;
    vox_log (error => "exception in client (%s): %s", $ev, $ex);
    $game->{front}->msg ("Fatal Error: Exception in client caught: $ev: $ex");
 });
