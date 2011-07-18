@@ -299,6 +299,9 @@ void vox_render_free_geom (void *c)
 // Global renderer init function. Just pre allocates stuff for now.
 void vox_render_init ()
 {
+  if (geom_last_free > 0)
+    return;
+
   geom_last_free = 0;
 
   int i;
