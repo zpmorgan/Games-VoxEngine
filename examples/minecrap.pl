@@ -32,6 +32,7 @@ if ($spawn_server){
          pipe_from_client => $client_to_server, 
          log_categories => ['info', 'error', 'warn'],
          log_file => '/tmp/minecrap_server.log',
+         temporary => 1,
       );
       #$server->init;
       #$server->enable_log_categories('info', 'error', 'warn');

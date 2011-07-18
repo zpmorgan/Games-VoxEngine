@@ -48,6 +48,13 @@ sub _build_event_handler{
    $EH->init_object_events;
    return $EH;
 }
+
+#if temporary is set, shut down after player disconnects.
+has 'temporary' => (
+   is => 'ro',
+   isa => 'Bool',
+   default => 0,
+);
 has 'pipe_to_client' => (
    is => 'ro',
    isa => 'IO::Pipe',
@@ -57,12 +64,12 @@ has 'pipe_from_client' => (
    isa => 'IO::Pipe',
 );
 
-#sub port{9364};
 has 'port' => (
    isa => 'Int',
    is => 'ro',
    default => 9364,
 );
+
 
 =head1 NAME
 
@@ -196,6 +203,10 @@ sub client_disconnected {
    delete $self->{player_guards}->{$cid};
    delete $self->{clients}->{$cid};
    vox_log (info => "Client disconnected: %s", $cid);
+   if ($self->temporary){
+      vox_log (info => 'Shutting down temporary server.');
+      $self->shutdown;
+   }
 }
 
 sub schedule_chunk_upd {
