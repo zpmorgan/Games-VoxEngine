@@ -282,7 +282,7 @@ void vox_render_free_geom (void *c)
   if (geom_last_free < GEOM_PRE_ALLOC)
     {
       geom_pre_alloc[geom_last_free++] = c;
-      ctr_render_cleanup_geom (c); // make some buffers smaller
+      vox_render_cleanup_geom (c); // make some buffers smaller
     }
   else
     {
