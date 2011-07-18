@@ -116,14 +116,14 @@ void vox_dyn_buf_grow (vox_dyn_buf *db, unsigned int items)
 
   void *nb = safemalloc (items * db->item);
   memcpy (nb, *(db->ptr), db->alloc * db->item);
-  free (*(db->ptr));
+  safefree (*(db->ptr));
   *(db->ptr) = nb;
   db->alloc = items;
 }
 
 void vox_dyn_buf_free (vox_dyn_buf *db)
 {
-  free (*(db->ptr));
+  safefree (*(db->ptr));
 }
 
 /* The main data structure that holds the information to
