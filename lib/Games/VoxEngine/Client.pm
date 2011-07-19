@@ -69,17 +69,14 @@ has 'port' => (
 );
 
 has 'host' => (
-   isa => 'Int',
+   isa => 'Str',
    is => 'ro',
    default => 'localhost',
 );
 
 
-sub new {
-   my $this  = shift;
-   my $class = ref ($this) || $this;
-   my $self  = { @_ };
-   bless $self, $class;
+sub BUILD {
+   my $self  = shift;
 
    Games::VoxEngine::World::init (sub {
    }, sub { });
@@ -140,7 +137,6 @@ sub new {
          delete $self->{requested_chunks}->{$_} if $td > 2;
       }
    };
-
    $self->connect ($self->host , $self->port);
 
    return $self
@@ -161,6 +157,8 @@ sub reconnect {
 
 sub connect {
    my ($self, $host, $port) = @_;
+
+   vox_log (debug => "connecting to server %s at port %d", $host, $port);
 
    delete $self->{recon};
    tcp_connect $host, $port, sub {

@@ -69,7 +69,11 @@ has 'port' => (
    is => 'ro',
    default => 9364,
 );
-
+has _cv => (
+   isa => 'AnyEvent::CondVar',
+   is => 'ro',
+   default => sub{ AnyEvent->condvar() },
+);
 
 =head1 NAME
 
@@ -109,6 +113,8 @@ sub BUILD {
 sub listen {
    my ($self) = @_;
 
+   #AnyEvent won't stop until $self->_cv->send().
+
    tcp_server undef, $self->port, sub {
       my ($fh, $h, $p) = @_;
 
@@ -129,6 +135,7 @@ sub listen {
    };
 
    vox_log (info => "Listening for clients on port %d", $self->port);
+   $self->_cv->recv();
 }
 
 sub shutdown {
@@ -137,7 +144,7 @@ sub shutdown {
    for (values %{$self->{players}}) {
       $_->save;
    }
-   $::CV->send;
+   $self->_cv->send;
 }
 
 sub handle_protocol {
@@ -203,6 +210,8 @@ sub client_disconnected {
    delete $self->{player_guards}->{$cid};
    delete $self->{clients}->{$cid};
    vox_log (info => "Client disconnected: %s", $cid);
+   vox_log (info => "temp: " . $self->temporary);
+
    if ($self->temporary){
       vox_log (info => 'Shutting down temporary server.');
       $self->shutdown;

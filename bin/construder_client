@@ -14,8 +14,9 @@ our $game = eval { Games::VoxEngine::Client->new (
       port => $ARGV[2] || 9364,
       host => $ARGV[1] || 'localhost',
 ) };
+vox_log error => 'host: '.$game->{host};
 if ($@) {
-   vox_log (error => "Couldn't initialized client: %s", $@);
+   vox_log (error => "Couldn't initialize client: %s", $@);
    exit 1;
 }
 

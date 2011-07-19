@@ -9,10 +9,10 @@ vox_enable_log_categories ('info', 'error', 'warn');
 
 Games::VoxEngine::Debug::init ("server");
 
-our $CV = AE::cv;
+#our $CV = AE::cv;
 
 our $server;
 $server = Games::VoxEngine::Server->new;
 $server->listen;
 
-$CV->recv;
+#$CV->recv;

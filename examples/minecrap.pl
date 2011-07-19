@@ -22,37 +22,34 @@ if ($spawn_server){
    
    if (fork()==0){
       #run server.
-      #initialize debug stuff
-      vox_enable_log_categories ('info', 'error', 'warn');
+    #  vox_enable_log_categories ('debug', 'info', 'error', 'warn', 'chat');
       Games::VoxEngine::Debug::init ("server");
 
-      our $CV = AE::cv;
       my $server = Games::VoxEngine::Server->new(
          pipe_to_client => $server_to_client,
          pipe_from_client => $client_to_server, 
-         log_categories => ['info', 'error', 'warn'],
-         log_file => '/tmp/minecrap_server.log',
+      #   log_categories => ['info', 'error', 'warn'],
+      #   log_file => '/tmp/minecrap_server.log',
          temporary => 1,
       );
-      #$server->init;
-      #$server->enable_log_categories('info', 'error', 'warn');
       $server->listen;
-      $CV->recv;
       exit(0);
    }
 
+   vox_enable_log_categories ('debug', 'info', 'error', 'warn', 'chat');
    Games::VoxEngine::Debug::init ("client");
    #run client.
    my $client = eval { Games::VoxEngine::Client->new (
       auto_login => $login_name,
       pipe_from_server => $server_to_client,
       pipe_to_server => $client_to_server, 
-      log_categories => ['info', 'error', 'warn'],
+   #   log_categories => ['info', 'error', 'warn'],
     #  log_file => '/tmp/minecrap_client.log',
+      host => 'localhost',
       port => 9364,
    ) };
    if ($@) {
-      vox_log (error => "Couldn't initialized client: %s", $@);
+      vox_log (error => "Couldn't initialize client: %s", $@);
       exit 1;
    }
 
@@ -61,7 +58,7 @@ if ($spawn_server){
          vox_log (error => "exception in client (%s): %s", $ev, $ex);
          $client->{front}->msg ("Fatal Error: Exception in client caught: $ev: $ex");
          });
-sleep(5);
+   sleep(5);
    $client->start;
 
 
