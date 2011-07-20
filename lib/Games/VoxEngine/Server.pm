@@ -18,7 +18,6 @@ package Games::VoxEngine::Server;
 
 #use base qw/Object::Event/;
 use Mouse;
-
 use AnyEvent;
 use AnyEvent::Handle;
 use AnyEvent::Socket;
@@ -55,14 +54,12 @@ has 'temporary' => (
    isa => 'Bool',
    default => 0,
 );
-has 'pipe_to_client' => (
+has run_locally => (
    is => 'ro',
-   isa => 'IO::Pipe',
+   isa => 'ArrayRef',
 );
-has 'pipe_from_client' => (
-   is => 'ro',
-   isa => 'IO::Pipe',
-);
+sub pipe_from_client{ shift()->run_locally()->[0] }
+sub pipe_to_client{ shift()->run_locally()->[1] }
 
 has 'port' => (
    isa => 'Int',
@@ -84,7 +81,6 @@ Games::VoxEngine::Server - Server side networking and player management
 =cut
 
 our $RES;
-our $SHELL;
 
 sub BUILD {
    my ($self) = @_;
@@ -112,8 +108,47 @@ sub BUILD {
 
 sub listen {
    my ($self) = @_;
-
+   
+   if ($self->run_locally){
+     #use pipes for communication 
+     $self->pipe_listen();
+   }
+   else{
+      $self->tcp_listen();
+   }
    #AnyEvent won't stop until $self->_cv->send().
+   $self->_cv->recv();
+};
+
+#deal with just one client, with a pipe.
+sub pipe_listen{
+   my $self = shift;
+   my $cid = "piper42";
+   my $hdl_in = AnyEvent::Handle->new(
+      fh => $self->pipe_from_client,
+      on_error => sub {
+         my ($hdl, $fatal, $msg) = @_;
+         $hdl->destroy;
+         $self->client_disconnected ($cid, "error: $msg");
+      },
+   );
+   my $hdl_out = AnyEvent::Handle->new(
+      fh => $self->pipe_to_client,
+      on_error => sub {
+         my ($hdl, $fatal, $msg) = @_;
+         $hdl->destroy;
+         $self->client_disconnected ($cid, "error: $msg");
+      },
+   );
+   $self->{clients}->{$cid}{in}  = $hdl_in;
+   $self->{clients}->{$cid}{out} = $hdl_out;
+   $self->client_connected ($cid);
+   $self->handle_protocol ($cid);
+}
+
+#start a tcp server on $self->port
+sub tcp_listen{
+   my $self = shift;
 
    tcp_server undef, $self->port, sub {
       my ($fh, $h, $p) = @_;
@@ -128,14 +163,14 @@ sub listen {
             $self->client_disconnected ($cid, "error: $msg");
          },
       );
-      $self->{clients}->{$cid} = $hdl;
-
+      #sockets are bidirectional. use same handle for in & out.
+      $self->{clients}->{$cid}{out} = $hdl;
+      $self->{clients}->{$cid}{in} = $hdl; 
       $self->client_connected ($cid);
       $self->handle_protocol ($cid);
    };
 
    vox_log (info => "Listening for clients on port %d", $self->port);
-   $self->_cv->recv();
 }
 
 sub shutdown {
@@ -150,7 +185,7 @@ sub shutdown {
 sub handle_protocol {
    my ($self, $cid) = @_;
 
-   $self->{clients}->{$cid}->push_read (packstring => "N", sub {
+   $self->{clients}->{$cid}{in}->push_read (packstring => "N", sub {
       my ($handle, $string) = @_;
       $self->handle_packet ($cid, data2packet ($string));
       $self->handle_protocol ($cid);
@@ -162,7 +197,7 @@ sub send_client {
    #print (%$hdr, "\n") and confess unless $body;
    $body //= '';
 
-   $self->{clients}->{$cid}->push_write (packstring => "N", packet2data ($hdr, $body));
+   $self->{clients}->{$cid}{out}->push_write (packstring => "N", packet2data ($hdr, $body));
 
    if (!grep { $hdr->{cmd} eq $_ } qw/chunk activate_ui/) {
       vox_log (network => "send[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
@@ -196,7 +231,7 @@ sub push_transfer {
    return unless $t;
 
    my $data = shift @$t;
-   $self->{clients}->{$cid}->push_write (packstring => "N", $data);
+   $self->{clients}->{$cid}{out}->push_write (packstring => "N", $data);
    unless (@$t) {
       $self->send_client ($cid, { cmd => "transfer_end" });
       delete $self->{transfer}->{$cid};

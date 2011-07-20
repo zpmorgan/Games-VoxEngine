@@ -53,14 +53,12 @@ sub _build_event_handler{
    $EH->init_object_events;
    return $EH;
 }
-has 'pipe_to_server' => (
+has run_locally => (
    is => 'ro',
-   isa => 'IO::Pipe',
+   isa => 'ArrayRef',
 );
-has 'pipe_from_server' => (
-   is => 'ro',
-   isa => 'IO::Pipe',
-);
+sub pipe_from_server { shift()->run_locally()->[0] }
+sub pipe_to_server { shift()->run_locally()->[1] }
 
 has 'port' => (
    isa => 'Int',
@@ -73,7 +71,14 @@ has 'host' => (
    is => 'ro',
    default => 'localhost',
 );
-
+has srv_in => (
+   is => 'rw',
+   isa => 'AnyEvent::Handle',
+);
+has srv_out => (
+   is => 'rw',
+   isa => 'AnyEvent::Handle',
+);
 
 sub BUILD {
    my $self  = shift;
@@ -142,6 +147,11 @@ sub BUILD {
    return $self
 }
 
+sub is_connected{
+   my $self = shift;
+   return ( $self->srv_in() && $self->srv_out() );
+}
+
 sub start {
    my ($self) = @_;
 
@@ -150,12 +160,44 @@ sub start {
    $c->recv;
 }
 
-sub reconnect {
+sub connect {
    my ($self) = @_;
-   $self->connect ($self->host, $self->port);
+   if ($self->run_locally){
+      $self->piped_connect();
+   }
+   else {
+      $self->socket_connect ($self->host, $self->port);
+   }
 }
 
-sub connect {
+sub piped_connect{
+   my $self = shift;
+   
+   vox_log (debug => "connecting to piped server");
+
+   my $hdl_in = AnyEvent::Handle->new(
+      fh => $self->pipe_from_server(),
+      on_error => sub {
+         my ($hdl, $fatal, $msg) = @_;
+         $hdl->destroy;
+         $self->disconnected;
+      },
+   );
+   my $hdl_out = AnyEvent::Handle->new(
+      fh => $self->pipe_to_server(),
+      on_error => sub {
+         my ($hdl, $fatal, $msg) = @_;
+         $hdl->destroy;
+         $self->disconnected;
+      },
+   );
+   $self->{srv_in}  = $hdl_in;
+   $self->{srv_out} = $hdl_out;
+   $self->handle_protocol;
+   $self->connected;
+}
+
+sub socket_connect {
    my ($self, $host, $port) = @_;
 
    vox_log (debug => "connecting to server %s at port %d", $host, $port);
@@ -166,7 +208,7 @@ sub connect {
       unless ($fh) {
          vox_log (error => "Couldn't connect to server %s at port %d: %s", $host, $port, $!);
          $self->{front}->msg ("Couldn't connect to server: $!");
-         $self->{recon} = AE::timer 5, 0, sub { $self->reconnect; };
+         $self->{recon} = AE::timer 5, 0, sub { $self->connect; };
          return;
       }
 
@@ -178,8 +220,9 @@ sub connect {
             $self->disconnected;
          }
       );
-
-      $self->{srv} = $hdl;
+      # tcp is bidirectional. Same handle for both
+      $self->{srv_in}  = $hdl;
+      $self->{srv_out} = $hdl;
       $self->handle_protocol;
       $self->connected;
    };
@@ -188,7 +231,7 @@ sub connect {
 sub handle_protocol {
    my ($self) = @_;
 
-   $self->{srv}->push_read (packstring => "N", sub {
+   $self->srv_in->push_read (packstring => "N", sub {
       my ($handle, $string) = @_;
       $self->handle_packet (data2packet ($string));
       $self->handle_protocol;
@@ -197,16 +240,21 @@ sub handle_protocol {
 
 sub send_server {
    my ($self, $hdr, $body) = @_;
-   if ($self->{srv}) {
-      $self->{srv}->push_write (packstring => "N", packet2data ($hdr, $body));
+   if ($self->is_connected()) {
       vox_log (network => "send[%d]> %s: %s", length ($body), $hdr->{cmd}, join (',', keys %$hdr));
+      $self->srv_out->push_write (packstring => "N", packet2data ($hdr, $body));
    }
 }
 
 sub connected {
    my ($self) = @_;
    $self->{front}->msg ("Connected to Server!");
-   vox_log (info => "connected to server %s on port %d", $self->host, $self->port);
+   if ($self->run_locally){
+      vox_log (info => "connected to piped server.");
+   } else {
+      vox_log (info => "connected to server %s on port %d", $self->host, $self->port);
+   }
+
    $self->send_server ({ cmd => 'hello', version => "Games::VoxEngine::Client 0.1" });
 }
 
@@ -327,11 +375,20 @@ sub handle_packet {
 
 sub disconnected {
    my ($self) = @_;
-   delete $self->{srv};
-   $self->{front}->msg ("Disconnected from server!");
-   $self->{front}->clear_chunks;
-   $self->{recon} = AE::timer 5, 0, sub { $self->reconnect; };
-   vox_log (info => "disconnected from server");
+   if($self->run_locally){
+      #local server shut down. so exit?
+      $self->_cv->send();
+      vox_log (info => "disconnected from local server");
+   }
+   else{
+      #try to reconnect.
+      delete $self->{srv_in};
+      delete $self->{srv_out};
+      $self->{front}->msg ("Disconnected from server!");
+      $self->{front}->clear_chunks;
+      $self->{recon} = AE::timer 5, 0, sub { $self->connect; };
+      vox_log (info => "disconnected from server");
+   }
 }
 
 =back

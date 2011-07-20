@@ -8,7 +8,7 @@ use Getopt::Long;
 use IO::Pipe;
 use AnyEvent;
 
-vox_enable_log_categories ('info', 'error', 'warn', 'chat');
+vox_enable_log_categories ('network', 'info', 'error', 'warn', 'chat');
 
 my $spawn_server = 1;
 my $login_name = 'foo';
@@ -17,8 +17,8 @@ GetOptions ('spawn!' => \$spawn_server,
 );
 
 if ($spawn_server){
-   my $server_to_client = IO::Pipe->new();
-   my $client_to_server = IO::Pipe->new();
+   my ($client_from_server, $server_to_client) = AnyEvent::Util::portable_pipe();
+   my ($server_from_client, $client_to_server) = AnyEvent::Util::portable_pipe();
    
    if (fork()==0){
       #run server.
@@ -26,10 +26,9 @@ if ($spawn_server){
       Games::VoxEngine::Debug::init ("server");
 
       my $server = Games::VoxEngine::Server->new(
-         pipe_to_client => $server_to_client,
-         pipe_from_client => $client_to_server, 
-      #   log_categories => ['info', 'error', 'warn'],
-      #   log_file => '/tmp/minecrap_server.log',
+         #pipe_to_client => $server_to_client,
+         #pipe_from_client => $server_from_client, 
+         run_locally => [$server_from_client, $server_to_client],
          temporary => 1,
       );
       $server->listen;
@@ -41,12 +40,11 @@ if ($spawn_server){
    #run client.
    my $client = eval { Games::VoxEngine::Client->new (
       auto_login => $login_name,
-      pipe_from_server => $server_to_client,
-      pipe_to_server => $client_to_server, 
-   #   log_categories => ['info', 'error', 'warn'],
-    #  log_file => '/tmp/minecrap_client.log',
-      host => 'localhost',
-      port => 9364,
+      #pipe_to_server => $client_to_server, 
+      #pipe_from_server => $client_from_server,
+      run_locally => [$client_from_server, $client_to_server],
+      #host => 'localhost',
+      #port => 9364,
    ) };
    if ($@) {
       vox_log (error => "Couldn't initialize client: %s", $@);
@@ -58,7 +56,7 @@ if ($spawn_server){
          vox_log (error => "exception in client (%s): %s", $ev, $ex);
          $client->{front}->msg ("Fatal Error: Exception in client caught: $ev: $ex");
          });
-   sleep(5);
+   #sleep(5);
    $client->start;
 
 
