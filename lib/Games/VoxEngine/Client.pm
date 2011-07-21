@@ -80,6 +80,13 @@ has srv_out => (
    isa => 'AnyEvent::Handle',
 );
 
+#event loop conditional
+has _cv => (
+   isa => 'AnyEvent::CondVar',
+   is => 'ro',
+   default => sub{ AnyEvent->condvar() },
+);
+
 sub BUILD {
    my $self  = shift;
 
@@ -154,10 +161,7 @@ sub is_connected{
 
 sub start {
    my ($self) = @_;
-
-   my $c = AnyEvent->condvar;
-
-   $c->recv;
+   $self->_cv->recv;
 }
 
 sub connect {
@@ -179,16 +183,14 @@ sub piped_connect{
       fh => $self->pipe_from_server(),
       on_error => sub {
          my ($hdl, $fatal, $msg) = @_;
-         $hdl->destroy;
-         $self->disconnected;
+         $self->disconnect;
       },
    );
    my $hdl_out = AnyEvent::Handle->new(
       fh => $self->pipe_to_server(),
       on_error => sub {
          my ($hdl, $fatal, $msg) = @_;
-         $hdl->destroy;
-         $self->disconnected;
+         $self->disconnect;
       },
    );
    $self->{srv_in}  = $hdl_in;
@@ -216,8 +218,7 @@ sub socket_connect {
          fh => $fh,
          on_error => sub {
             my ($hdl, $fatal, $msg) = @_;
-            $hdl->destroy;
-            $self->disconnected;
+            $self->disconnect;
          }
       );
       # tcp is bidirectional. Same handle for both
@@ -373,22 +374,36 @@ sub handle_packet {
    }
 }
 
-sub disconnected {
+sub disconnect {
    my ($self) = @_;
    if($self->run_locally){
       #local server shut down. so exit?
-      $self->_cv->send();
+      $self->srv_out->push_shutdown(); #send eof so server shuts down
+      $self->stop;
+      vox_log (network => "pushed EOF to server.");
       vox_log (info => "disconnected from local server");
    }
    else{
-      #try to reconnect.
+      #shut down socket.
+      unless ($self->srv_out->destroyed()) {
+         $self->srv_out->push_shutdown(); #send eof to server
+         $self->srv_out->destroy(); #send eof so server shuts down
+      }
       delete $self->{srv_in};
       delete $self->{srv_out};
+      
       $self->{front}->msg ("Disconnected from server!");
       $self->{front}->clear_chunks;
+      #try to reconnect.
       $self->{recon} = AE::timer 5, 0, sub { $self->connect; };
       vox_log (info => "disconnected from server");
    }
+}
+
+#end event loop. try to shut down without calling exit.
+sub stop{
+   my $self = shift;
+   $self->_cv->send;
 }
 
 =back

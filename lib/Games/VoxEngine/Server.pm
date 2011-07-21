@@ -131,6 +131,11 @@ sub pipe_listen{
          $hdl->destroy;
          $self->client_disconnected ($cid, "error: $msg");
       },
+      on_eof => sub {
+         my ($hdl, $fatal, $msg) = @_;
+         $hdl->destroy;
+         $self->client_disconnected ($cid, "error: $msg");
+      },
    );
    my $hdl_out = AnyEvent::Handle->new(
       fh => $self->pipe_to_client,
@@ -158,6 +163,11 @@ sub tcp_listen{
       my $hdl = AnyEvent::Handle->new (
          fh => $fh,
          on_error => sub {
+            my ($hdl, $fatal, $msg) = @_;
+            $hdl->destroy;
+            $self->client_disconnected ($cid, "error: $msg");
+         },
+         on_eof => sub {
             my ($hdl, $fatal, $msg) = @_;
             $hdl->destroy;
             $self->client_disconnected ($cid, "error: $msg");

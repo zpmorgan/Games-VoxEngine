@@ -98,7 +98,9 @@ sub init_physics {
 
 sub exit_app {
    my ($self) = @_;
-   exit;
+   $self->{client}->disconnect;
+   $self->{client}->stop;
+   #exit;
 }
 
 sub resize_app {
@@ -736,6 +738,10 @@ sub setup_event_poller {
    $self->{selector_w} = AE::timer 0, 0.1, sub {
       ($self->{selected_box}, $self->{selected_build_box})
          = $self->get_selected_box_pos;
+      $self->{selected_box}       = undef
+         unless world_has_chunk_at ($self->{selected_box});
+      $self->{selected_build_box} = undef
+         unless world_has_chunk_at ($self->{selected_build_box});
 
       $anim_ltime = time - 0.02 if not defined $anim_ltime;
       my $ctime = time;
@@ -940,13 +946,9 @@ sub physics_tick : event_cb {
    my ($self, $dt) = @_;
 
    my $player = $self->{phys_obj}->{player};
-   my $below_feet_chnk =
-      Games::VoxEngine::World::has_chunk (world_pos2chunk (vsubd ($player->{pos}, 0, 1, 0)));
-   my $feet_chnk =
-      Games::VoxEngine::World::has_chunk (world_pos2chunk ($player->{pos}));
-   my $head_chnk =
-      Games::VoxEngine::World::has_chunk (
-         world_pos2chunk (vaddd ($player->{pos}, 0, $PL_HEIGHT, 0)));
+   my $below_feet_chnk = world_has_chunk_at (vsubd ($player->{pos}, 0, 1, 0));
+   my $feet_chnk = world_has_chunk_at ($player->{pos});
+   my $head_chnk = world_has_chunk_at (vaddd ($player->{pos}, 0, $PL_HEIGHT, 0));
    return unless $self->{ghost_mode} || $below_feet_chnk && $feet_chnk && $head_chnk;
 
    my $bx = Games::VoxEngine::World::at (@{vaddd ($player->{pos}, 0, -1, 0)});
