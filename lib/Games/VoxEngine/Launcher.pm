@@ -60,6 +60,19 @@ has login_name => (
    default => 'foo',
 );
 
+#keep track of processes running.
+has $_ => (
+   isa => 'Bool',
+   is => 'rw',
+   default => 0,
+) for qw/ client_up server_up /;
+
+has _cv => (
+   isa => 'AnyEvent::CondVar',
+   is => 'ro',
+   default => sub{ AnyEvent->condvar() },
+);
+
 sub BUILD{
    my $self = shift;
   
@@ -90,6 +103,7 @@ sub start_server {
    my $server_pid = fork();
    if ($server_pid){
       $self->_server_pid($server_pid);
+      $self->server_up(1);
    }
    else { #this is child. so run server.
       vox_enable_log_categories ('info', 'error', 'warn');
@@ -113,6 +127,7 @@ sub start_client{
    my $client_pid = fork();
    if ($client_pid){
       $self->_client_pid($client_pid);
+      $self->client_up(1);
    }
    else { #this is child. so run client.
 
@@ -134,10 +149,38 @@ sub start_client{
 
 sub haunt {
    my $self = shift;
-sleep(5);
+   
+   #when client exits
+   $self->{_clientwatch} = AnyEvent->child (pid => $self->_client_pid, cb => sub {
+      my ($pid, $status) = @_;
+      $self->client_up(0);
+      #try to TERM before KILL
+      kill 15, $self->_server_pid;
+
+      #after 5 secs, kill server immediately.
+      $self->{killserver_timer} = AnyEvent::Timer->new(
+         after => 5,
+         cb => sub {
+            kill 9, $self->_server_pid;
+         },
+      );
+   });
+   
+   #when server exits
+   $self->{_serverwatch} = AnyEvent->child (pid => $self->_server_pid, cb => sub {
+      my ($pid, $status) = @_;
+      $self->server_up(0);
+      if ($self->client_up){
+         kill 9, $self->_client_pid;
+         die "Server crashed?";
+      }
+      else {
+         #both children are dead. Commit suicide.
+         $self->_cv->send;
+      }
+   });
+   $self->_cv->recv;
 }
-
-
 1;
 =back
 
