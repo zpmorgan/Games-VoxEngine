@@ -187,12 +187,23 @@ sub tcp_listen{
             $hdl->destroy;
             $self->client_disconnected ($cid, "error: $msg");
          },
+         on_read => sub{ 
+            my $hdl = shift;
+            vox_log (debug => "on_read: $hdl->{rbuf}");
+            $hdl->push_read( packstring => 'N', sub{
+               my ($handle,$string) = @_;
+               vox_log (debug => "data: $string");
+               $self->handle_protocol($cid,$string); 
+               return 1;
+            });
+            return 0; #leave the read buffer.
+         },
       );
       #sockets are bidirectional. use same handle for in & out.
       $self->{clients}->{$cid}{out} = $hdl;
       $self->{clients}->{$cid}{in} = $hdl; 
       $self->client_connected ($cid);
-      $self->handle_protocol ($cid);
+     # $self->handle_protocol ($cid);
    };
 
    vox_log (info => "Listening for clients on port %d", $self->port);

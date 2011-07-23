@@ -106,7 +106,7 @@ sub start_server {
       $self->server_up(1);
    }
    else { #this is child. so run server.
-      vox_enable_log_categories ('info', 'error', 'warn');
+      vox_enable_log_categories (qw'network info error warn');
       Games::VoxEngine::Debug::init ("server");
 
       my $server = eval { Games::VoxEngine::Server->new(
@@ -131,7 +131,7 @@ sub start_client{
    }
    else { #this is child. so run client.
 
-      vox_enable_log_categories ('info', 'error', 'warn');
+      vox_enable_log_categories (qw/network info error warn/);
       Games::VoxEngine::Debug::init ("client");
       my $client = eval { Games::VoxEngine::Client->new (
             auto_login => $self->login_name,
