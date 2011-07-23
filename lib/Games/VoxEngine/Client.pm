@@ -161,6 +161,7 @@ sub is_connected{
 
 sub start {
    my ($self) = @_;
+   $self->send_server({cmd => "BLAH BLAH BLAH BLAH", foo=>"BLAH BLAH BLAH"});
    $self->_cv->recv;
 }
 

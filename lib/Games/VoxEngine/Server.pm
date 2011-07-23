@@ -128,13 +128,28 @@ sub pipe_listen{
       fh => $self->pipe_from_client,
       on_error => sub {
          my ($hdl, $fatal, $msg) = @_;
+         vox_log (network => "received error from client.");
          $hdl->destroy;
          $self->client_disconnected ($cid, "error: $msg");
       },
       on_eof => sub {
-         my ($hdl, $fatal, $msg) = @_;
+         my $hdl = shift;
+         vox_log (network => "received EOF from client.");
          $hdl->destroy;
-         $self->client_disconnected ($cid, "error: $msg");
+         $self->client_disconnected ($cid, "pipe closed.");
+      },
+      on_read => sub{ 
+         my $hdl = shift;
+         vox_log (debug => "on_read: $hdl->{rbuf}");
+         #vox_log (debug => "pushing a read on server");
+         $hdl->push_read( packstring => 'N', sub{
+            my ($handle,$string) = @_;
+         #   vox_log (debug => "pushed read initiated.");
+            vox_log (debug => "data: $string");
+            $self->handle_protocol($cid,$string); 
+            return 1;
+         });
+         return 0; #leave the read buffer.
       },
    );
    my $hdl_out = AnyEvent::Handle->new(
@@ -148,7 +163,7 @@ sub pipe_listen{
    $self->{clients}->{$cid}{in}  = $hdl_in;
    $self->{clients}->{$cid}{out} = $hdl_out;
    $self->client_connected ($cid);
-   $self->handle_protocol ($cid);
+   #$self->handle_protocol ($cid);
 }
 
 #start a tcp server on $self->port
@@ -193,13 +208,11 @@ sub shutdown {
 }
 
 sub handle_protocol {
-   my ($self, $cid) = @_;
+   my ($self, $cid, $string) = @_;
 
-   $self->{clients}->{$cid}{in}->push_read (packstring => "N", sub {
-      my ($handle, $string) = @_;
+   if ($self->{clients}->{$cid}){
       $self->handle_packet ($cid, data2packet ($string));
-      $self->handle_protocol ($cid);
-   }) if $self->{clients}->{$cid};
+   }
 }
 
 sub send_client {
@@ -249,12 +262,13 @@ sub push_transfer {
 }
 
 sub client_disconnected {
-   my ($self, $cid) = @_;
+   my ($self, $cid, $msg) = @_;
    my $pl = delete $self->{players}->{$cid};
    $pl->logout if $pl;
    delete $self->{player_guards}->{$cid};
    delete $self->{clients}->{$cid};
    vox_log (info => "Client disconnected: %s", $cid);
+   vox_log (info => "disconnect msg: %s", $msg);
    vox_log (info => "temp: " . $self->temporary);
 
    if ($self->temporary){
@@ -379,6 +393,7 @@ sub handle_packet {
       }
 
    } elsif ($hdr->{cmd} eq 'login') {
+      $hdr->{name} = 0;
       if ($hdr->{name} ne '') {
          $self->login ($cid, $hdr->{name})
 

@@ -26,6 +26,7 @@ our @EXPORT = qw/
    vox_enable_log_categories
    vox_disable_log_categories
 /;
+#use Carp 'confess';
 
 =head1 NAME
 
@@ -44,6 +45,11 @@ Games::VoxEngine::Logging - This module takes care of logging construder client 
 our %CATEGORIES;
 our $LOGFILE;
 our $LOGFILE_FH;
+our $metacat = '';
+
+sub set_metacat{
+   $metacat = shift . ' ';
+}
 
 sub vox_enable_log_categories {
    my (@cats) = @_;
@@ -87,7 +93,10 @@ sub vox_log {
    my $date =
       sprintf "%04d-%02d-%02d %02d:%02d:%02d",
          $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
-   my $str = sprintf "%s+%5.4f [%s]: $fmt", $date, $tr, $category, @args;
+   eval{$fmt = sprintf($fmt,@args)};
+   #network sometimes sends data which messes up $fmt.
+   print "$fmt failed to format: $@" and return if $@;
+   my $str = sprintf "%s+%5.4f [$metacat$category]: $fmt", $date, $tr;
    $str .= "\n" unless $str =~ /\n$/s;
 
    if ($LOGFILE ne '') {

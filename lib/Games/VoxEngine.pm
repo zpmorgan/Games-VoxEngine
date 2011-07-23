@@ -289,6 +289,7 @@ our $SHELL;
 
 sub init {
    my ($name) = @_;
+   Games::VoxEngine::Logging::set_metacat($name);
 
    return unless $ENV{PERL_GAMES_CONSTRUDER_DEBUG};
 

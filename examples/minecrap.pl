@@ -1,14 +1,20 @@
 #!/usr/bin/env perl
 use common::sense;
 use Games::VoxEngine;
-use Games::VoxEngine::Logging;
-use Games::VoxEngine::Client;
-use Games::VoxEngine::Server;
+#use Games::VoxEngine::Logging;
+#use Games::VoxEngine::Client;
+#use Games::VoxEngine::Server;
+use Games::VoxEngine::Launcher;
 use Getopt::Long;
-use IO::Pipe;
-use AnyEvent;
+#use AnyEvent;
 
-vox_enable_log_categories ('network', 'info', 'error', 'warn', 'chat');
+my $launchy = Games::VoxEngine::Launcher->new(
+   
+);
+$launchy->launch();
+
+__END__
+#vox_enable_log_categories ('debug','network', 'info', 'error', 'warn', 'chat');
 
 my $spawn_server = 1;
 my $login_name = 'foo';
@@ -22,7 +28,7 @@ if ($spawn_server){
    
    if (fork()==0){
       #run server.
-    #  vox_enable_log_categories ('debug', 'info', 'error', 'warn', 'chat');
+      vox_enable_log_categories ('debug', 'info', 'error', 'warn', 'chat');
       Games::VoxEngine::Debug::init ("server");
 
       my $server = Games::VoxEngine::Server->new(
@@ -35,7 +41,7 @@ if ($spawn_server){
       exit(0);
    }
 
-   vox_enable_log_categories ('debug', 'info', 'error', 'warn', 'chat');
+   vox_enable_log_categories ('debug','network', 'info', 'error', 'warn', 'chat');
    Games::VoxEngine::Debug::init ("client");
    #run client.
    my $client = eval { Games::VoxEngine::Client->new (

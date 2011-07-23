@@ -100,7 +100,7 @@ sub exit_app {
    my ($self) = @_;
    $self->{client}->disconnect;
    $self->{client}->stop;
-   #exit;
+   exit;
 }
 
 sub resize_app {
